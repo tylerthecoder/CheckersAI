@@ -16,34 +16,29 @@ white = (255,255,255)
 
 pygame.init()
     
-#creating the grid array
-grid = []
-for i in range(8):
-    grid.append([]);
-    for j in range(8):
-        if j < 3 and (i+j)%2 == 0: #check if it is in the checker spot
-            grid[i].append("r"); 
-        elif j > 4 and (i+j)%2 == 0:
-            grid[i].append("b");
-        else:
-            grid[i].append("N");
-
 # Set the width and height of the screen [width, height]
 size = (700, 700)
 squareLength = math.floor(size[0]/8);
 screen = pygame.display.set_mode(size)
- 
-pygame.display.set_caption("Checkers")
- 
-# Loop until the user clicks the close button.
-done = False
- 
-# Used to manage how fast the screen updates
-clock = pygame.time.Clock()
+pygame.display.set_caption("Checkers")    
 
-selected = (-1,-1)
-mousePressed = True;
-turn = "r";
+#creating the grid array
+grid = []
+for col in range(8):
+    grid.append([]);
+    for row in range(8):
+        if row < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
+            grid[col].append("r"); #set the square to be red
+        elif row > 4 and (row+col)%2 == 0:
+            grid[col].append("b"); #set the square to be black
+        else:
+            grid[col].append("N"); #set the square to be empty
+
+clock = pygame.time.Clock() # Used to manage how fast the screen updates
+selected = (-1,-1) #this stores the value of the grid square that is currently selected
+mousePressed = True #variable to make the mouse click only happen when mouse is clicked up and then down
+turn = "r"
+done = False
 
 #==============================================
 #            Helper FUnctions
@@ -55,16 +50,9 @@ def otherColor(color):
     if color == "b":
         return "r"
 
+#function to save some typing
 def grd(t):
     return grid[t[0]][t[1]]
-    
-def checkIfKing(spot):
-    if grd(spot) == "r" and spot[1] == 7: #if it is red and on the bottom row
-        grid[spot[0]][spot[1]] = "R" #King Them
-        print("kinged")
-    elif grd(spot) == "b" and spot[1] == 0: #if it is black and on the top row
-        grid[spot[0]][spot[1]] = "B" #King Them
-        print("kinged")
 
         
 #This function was written to not modify any data. 
@@ -101,7 +89,7 @@ def makeTurn(startSpot,endSpot):
     #this is an array of values that will be replaced with "N", meaning we are deleting the piece in them
     removeSpots = [];
     
-    if (grd(endSpot) == "N"): #not jumming over piece
+    if (grd(endSpot) == "N"): #not jumping over piece
         dropSpot = endSpot
     else: #juming over piece
         dropSpot = (2*endSpot[0]-startSpot[0],2*endSpot[1]-startSpot[1]) #jump over
@@ -151,10 +139,16 @@ while not done:
             if res[0]: #if the move was sucsessful
                 
                 #set the new spot equal to the correct color
-                grid[res[1][0]][res[1][1]] = grd(selected);
+                newSpot = res[1];
+                grid[newSpot[0]][newSpot[1]] = grd(selected);
                 
                 #check if the newSquare is a king
-                checkIfKing(res[1]);
+                if grd(newSpot) == "r" and newSpot[1] == 7: #if it is red and on the bottom row
+                    grid[newSpot[0]][newSpot[1]] = "R" #King Them
+                    print("kinged")
+                elif grd(newSpot) == "b" and newSpot[1] == 0: #if it is black and on the top row
+                    grid[newSpot[0]][newSpot[1]] = "B" #King Them
+                    print("kinged")
                 
                 #loop through the spots that need deleted
                 for spot in res[2]: 
