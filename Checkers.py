@@ -23,16 +23,18 @@ screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Checkers")    
 
 #creating the grid array
-grid = []
+
+grid = {}
 for col in range(8):
-    grid.append([])
     for row in range(8):
-        if row < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
-            grid[col].append("r") #set the square to be red
-        elif row > 4 and (row+col)%2 == 0:
-            grid[col].append("b") #set the square to be black
+        if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
+            char = "r" #set the square to be red
+        elif col > 4 and (row+col)%2 == 0:
+            char = "b" #set the square to be black
         else:
-            grid[col].append("N") #set the square to be empty
+            char = "N" #set the square to be empty
+        
+        grid[(row,col)] = char
 
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
@@ -41,7 +43,7 @@ turn = "r"
 done = False
 
 #==============================================
-#            Helper FUnctions
+#            Helper Functions
 #==============================================
 
 def otherColor(color):
@@ -50,27 +52,12 @@ def otherColor(color):
     if color == "b":
         return "r"
 
-#function to save some typing
-def grd(t):
-    return grid[t[0]][t[1]]
-
-
-def vailidJump(start,end): #check if I can jump a piece in this configuation
-    c = otherColor(grd(start))
-
-    if grd((start[0]+1,start[1]+1)) == c: #if it is next to a piece of the other color
-        return True
-    elif grd((start[0]-1,start[1]+1)) == c: #if it is next to a piece of the other color
-        return True
-    
-    if grd(start) == grd(start).upper(): #it is a king
-        #checking behind it
-        if grd((start[0]+1,start[1]-1)) == c: #if it is next to a piece of the other color
-            return True
-        elif grd((start[0]-1,start[1]-1)) == c: #if it is next to a piece of the other color
-            return True
-    return False
-
+def isRealSpot(spot):
+    if (spot[0] < 0 or spot[0] > 7):
+        return False
+    elif (spot[1] < 0 or spot[1] > 7):
+        return False
+    return True
         
 #This function was written to not modify any data. 
 #This way, when the AI if checking possible moves, it can use this to see the state of the board without altering it
@@ -83,36 +70,51 @@ def makeTurn(startSpot,endSpot):
     #Index 3: If True Array of indices to destroy
     #         If False, String Describing error
    
-    if grd(startSpot).lower() != turn: #wrong player
+    if grid[startSpot].lower() != turn: #wrong player
         return [False,0,"Wrong Player"]
     
+    #if a jump is aviliable, then you must make it
+    jumps = checkForJump()
+    if len(jumps) > 0:
+        isJump = False
+        amJump = False
+        for i in jumps:
+            #if there is a jump for me
+            if i[0] == grid[startSpot]: 
+                isJump = True
+                #if I took the jump
+                if i[1] == startSpot:
+                    amJump = True
+        if isJump != amJump: #XNOR
+            return [False,8,"You need to take the jump"]
+
     if (startSpot[0]+startSpot[1])%2 != (endSpot[0]+endSpot[1])%2: #check if they are not diagonal
         return [False,1,"Not on Diagonal"]
     if abs(endSpot[0]-startSpot[0]) > 1: #too far away in the x-dir
         return [False,2,"Too far way in x-dir"]
     
-    if grd(startSpot).upper() == grd(startSpot): #if they are a king
+    if grid[startSpot].upper() == grid[startSpot]: #if they are a king
         if (abs(endSpot[1]-startSpot[1]) > 1): #too far away in the y-dir
             return [False,3,"Too far way in y-dir"]
     else: #if they are not a king
-        if (endSpot[1]-startSpot[1] != 1 and grd(startSpot).lower() == "r"):
+        if (endSpot[1]-startSpot[1] != 1 and grid[startSpot].lower() == "r"):
             return [False,4,"Can't Go Backwards"]
-        elif (endSpot[1]-startSpot[1] != -1 and grd(startSpot).lower() == "b"):
+        elif (endSpot[1]-startSpot[1] != -1 and grid[startSpot].lower() == "b"):
             return [False,4,"Can't Go Backwards"]
     
-    if grd(endSpot) == grd(startSpot): #The colors are the same, so you can't play there
+    if grid[endSpot] == grid[startSpot]: #The colors are the same, so you can't play there
         return [False,5,"Can't Jump your own Pieces"]
 
     #this is an array of values that will be replaced with "N", meaning we are deleting the piece in them
     removeSpots = []
     
-    if (grd(endSpot) == "N"): #not jumping over piece
+    if (grid[endSpot] == "N"): #not jumping over piece
         dropSpot = endSpot
     else: #juming over piece
         dropSpot = (2*endSpot[0]-startSpot[0],2*endSpot[1]-startSpot[1]) #jump over
         if dropSpot[0] == -1 or dropSpot[0] == 8 or dropSpot[1] == -1 or dropSpot[1] == 8:
             return [False,6,"Can't Jump off board"]
-        if grd(dropSpot) != "N": #Can't jump, piece on other side
+        if grid[dropSpot] != "N": #Can't jump, piece on other side
             return [False,7,"That Jump is blocked"]
         removeSpots.append(endSpot)
 
@@ -121,13 +123,70 @@ def makeTurn(startSpot,endSpot):
     return [True,dropSpot,removeSpots]
         
 def checkForJump():
+    possibleJumps = []
     for row in range(8):
         for col in range(8):
             #check all the boxes and the boxes around them
-            for i in range(-1,1,2):
-                for j in range(-1,1,2):
-                    if vailidJump((row,col),(row+i,col+j)):
-                        print("Good Jump")
+            start = (row,col)
+            rngi = [-1,1]
+            if grid[start] == grid[start].upper(): #it is a king
+                rngj = [-1,1]
+            elif grid[start] == "r": 
+                rngj = [1]
+            elif grid[start] == "b":
+                rngj = [-1]
+            
+            for i in rngi:
+                for j in rngj:
+                    check = (row+i,col+j)
+                    oc = otherColor(grid[start])
+                    if isRealSpot(check):
+                        #this is a valid place to jump
+                        if grid[check] == oc:
+                            #there is a piece there 
+                            #checking if the piece is jumpable
+                            landing = (2*check[0]-start[0],2*check[1]-start[1])
+                            if isRealSpot(landing) and grid[landing] == "N": #nothing in the landing square
+                                #it is good, add it to the array
+                                possibleJumps.append([grid[start],start,check])
+    return possibleJumps
+
+def allPosibleMoves (color):
+    allMoves = []
+    jumps = []
+    for row in range(8):
+        for col in range(8):
+            start = (row,col)
+            if grid[start] != color: #not on the right square
+                continue
+             #check all the boxes and the boxes around them
+            rngi = [-1,1]
+            if grid[start] == grid[start].upper(): #it is a king
+                rngj = [-1,1]
+            elif grid[start] == "r": 
+                rngj = [1]
+            elif grid[start] == "b":
+                rngj = [-1]
+            for i in rngi:
+                for j in rngj:
+                    check = (row+i,col+j)
+                    oc = otherColor(grid[start])
+                    if isRealSpot(check):
+                        if grid[check] == "N": #nothing there
+                            res = makeTurn(start,check)
+                            if res[0]:
+                                allMoves.append([start,check])
+                        elif grid[check] == oc: #a possible jump
+                            #checking if the piece is jumpable
+                            landing = (2*check[0]-start[0],2*check[1]-start[1])
+                            if isRealSpot(landing) and grid[landing] == "N": #nothing in the landing square
+                                #it is good, add it to the array
+                                jumps.append([grid[start],start,check])
+    if len(jumps) > 0:
+        print(jumps, "\n")
+    else:
+        print(allMoves,"\n")
+    
 
 
 #=============================================
@@ -146,14 +205,12 @@ while not done:
         #check where click happened;
         clickedSquare = (math.floor(pos[0]/(size[0]/8)),math.floor(pos[1]/(size[1]/8)))
 
-
-        checkForJump()
         #logic for selecting thing
         if selected[0] == -1: #if nothing is selected
             
-            if grd(clickedSquare).lower() == turn: #make sure it is your turn
+            if grid[clickedSquare].lower() == turn: #make sure it is your turn
                 selected = clickedSquare
-            elif grd(clickedSquare).lower() == otherColor(turn): #not your turn
+            elif grid[clickedSquare].lower() == otherColor(turn): #not your turn
                 print("Not your turn")
 
         elif selected == clickedSquare: #if you click the same spot then deselect
@@ -167,25 +224,27 @@ while not done:
                 
                 #set the new spot equal to the correct color
                 newSpot = res[1]
-                grid[newSpot[0]][newSpot[1]] = grd(selected)
+                grid[newSpot] = grid[selected]
                 
                 #check if the newSquare is a king
-                if grd(newSpot) == "r" and newSpot[1] == 7: #if it is red and on the bottom row
-                    grid[newSpot[0]][newSpot[1]] = "R" #King Them
+                if grid[newSpot] == "r" and newSpot[1] == 7: #if it is red and on the bottom row
+                    grid[newSpot] = "R" #King Them
                     print("kinged")
-                elif grd(newSpot) == "b" and newSpot[1] == 0: #if it is black and on the top row
-                    grid[newSpot[0]][newSpot[1]] = "B" #King Them
+                elif grid[newSpot] == "b" and newSpot[1] == 0: #if it is black and on the top row
+                    grid[newSpot] = "B" #King Them
                     print("kinged")
                 
                 #loop through the spots that need deleted
                 for spot in res[2]: 
-                    grid[spot[0]][spot[1]] = "N"
+                    grid[spot] = "N"
                 
                 #unselect square
                 selected = (-1,-1)
                 
                 #change the turn
                 turn = otherColor(turn)
+
+                allPosibleMoves(turn)
                 
             else: #the move was invalid
                 
@@ -212,24 +271,22 @@ while not done:
             squareX = i*squareLength
             squareY = j*squareLength
             
-            if selected[0] == i and selected[1] == j:
+            if selected == (i,j):
                 pygame.draw.rect(screen,green,[squareX,squareY,squareLength,squareLength])
             
             circleX = math.floor(i*squareLength+squareLength/2)
             circleY = math.floor(j*squareLength+squareLength/2)
             radius = math.floor(size[0]/32)
             
-            if grid[i][j].lower() == "r":
+            if grid[(i,j)].lower() == "r":
                 pygame.draw.circle(screen, red, [circleX, circleY], radius)
-            elif grid[i][j].lower() == "b":
+            elif grid[(i,j)].lower() == "b":
                 pygame.draw.circle(screen, black, [circleX, circleY], radius)
             
             #draw if it is a king
-            if grid[i][j] == grid[i][j].upper() and grid[i][j] != "N":
+            if grid[(i,j)] == grid[(i,j)].upper() and grid[(i,j)] != "N":
                 pygame.draw.circle(screen,yellow,[circleX,circleY],math.floor(radius/4))
                 
-                
- 
     #Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
