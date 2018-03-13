@@ -28,13 +28,18 @@ grid = {}
 for col in range(8):
     for row in range(8):
         if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
-            char = "r" #set the square to be red
+            char = "R" #set the square to be red
         elif col > 4 and (row+col)%2 == 0:
             char = "b" #set the square to be black
         else:
             char = "N" #set the square to be empty
         
         grid[(row,col)] = char
+        # grid[(row,col)] = "N"
+
+# grid[(4,4)] = "R"
+# grid[(0,0)] = "R"
+# grid[(3,3)] = "b"
 
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
@@ -61,148 +66,142 @@ def isRealSpot(spot):
         
 #This function was written to not modify any data. 
 #This way, when the AI if checking possible moves, it can use this to see the state of the board without altering it
-def makeTurn(startSpot,endSpot):
-    #return values
-    #Array(3)
-    #Index 1: True/False for if the jump is valid
-    #Index 2: If True, then return new location of the piece
-    #         If False, then return error number
-    #Index 3: If True Array of indices to destroy
-    #         If False, String Describing error
-   
-    result = {}
-    result["valid"] = False
-    if grid[startSpot].lower() != turn: #wrong player
+def makeTurn(start,end):
+    result = {
+        "valid":True,
+        "changeTurn":True,
+        "error":""
+    }
+    if grid[start].lower() != turn: #wrong player
+        result["valid"] = False
         result["error"] = "Wrong Player"
-        return [False,0,"Wrong Player"]
+        return result
     
     #if a jump is aviliable, then you must make it
-    jumps = allPosibleMoves(turn,True)
-    if len(jumps) > 0:
-        isJump = False
-        for i in jumps:
-            #if there is a jump for me
-            if i[1] == startSpot and i[2] == endSpot:
-                isJump = True
-        if not isJump: 
-            result["error"] = "You need to take the jump"
-            return [False,8,"You need to take the jump"]
+    #check if there is a jump avaliable
+    moves = allPosibleMoves(turn)
+    jump = False
+    myMove = False
+    for move in moves:
+        if move["start"] == start and move["end"] == end:
+            myMove = move
+        if move["jump"]:
+            jump = True
 
-    if (startSpot[0]+startSpot[1])%2 != (endSpot[0]+endSpot[1])%2: #check if they are not diagonal
-        result["error"] = "Not on Diagonal"
-        return [False,1,"Not on Diagonal"]
-    if abs(endSpot[0]-startSpot[0]) > 1: #too far away in the x-dir
-        result["error"] = "Too far away in the X direction"
-        return [False,2,"Too far way in x-dir"]
+    if not myMove:
+        return checkMove(start,end)
+
+    if jump and not myMove["jump"]:
+        result["valid"] = False
+        result["error"] = "You need to jump"
     
-    if grid[startSpot].upper() == grid[startSpot]: #if they are a king
-        if (abs(endSpot[1]-startSpot[1]) > 1): #too far away in the y-dir
-            result["error"] = "Too far away in the Y direction"
-            return [False,3,"Too far way in y-dir"]
-    else: #if they are not a king
-        if (endSpot[1]-startSpot[1] != 1 and grid[startSpot].lower() == "r"):
-            result["error"] = "Can't go backwards"
-            return [False,4,"Can't Go Backwards"]
-        elif (endSpot[1]-startSpot[1] != -1 and grid[startSpot].lower() == "b"):
-            result["error"] = "Can't go backwards"
-            return [False,4,"Can't Go Backwards"]
-    
-    if grid[endSpot] == grid[startSpot]: #The colors are the same, so you can't play there
-        result["error"] = "Can't jump your own Pieces"
-        return [False,5,"Can't jump your own Pieces"]
-
-    #this is an array of values that will be replaced with "N", meaning we are deleting the piece in them
-    removeSpots = []
-    
-    if (grid[endSpot] == "N"): #not jumping over piece
-        dropSpot = endSpot
-    else: #juming over piece
-        dropSpot = (2*endSpot[0]-startSpot[0],2*endSpot[1]-startSpot[1]) #jump over
-        if dropSpot[0] == -1 or dropSpot[0] == 8 or dropSpot[1] == -1 or dropSpot[1] == 8:
-            result["error"] = "Can't jump off board"
-            return [False,6,"Can't Jump off board"]
-        if grid[dropSpot] != "N": #Can't jump, piece on other side
-            result["error"] = "That jump is blocked"
-            return [False,7,"That Jump is blocked"]
-        #if jump, then check for double jump
-        
-        removeSpots.append(endSpot)
+    result["spotsToRemove"] = myMove["spotsToRemove"]
+    result["drop"] = myMove["drop"]
 
 
-    removeSpots.append(startSpot)
-    return [True,dropSpot,removeSpots]
+    #check for double jump
+    if myMove["jump"]:
+        king = grid[start] == grid[start].upper()
+        moves = checkForJump(turn,myMove["drop"],king)
+        dj = False
+        for move in moves:
+            if move["jump"]:
+                dj = True
+        if dj:
+            result["changeTurn"] = False
 
-
-def possibleMoves (spot):
-    #returns array of moves
-    #move = (isJump(Bool),start(Tuple),stop(Tuple))
-    moves = []
-    jumps = []
-    rngi = [-1,1]
-    if grid[spot] == grid[spot].upper(): #it is a king
-        rngj = [-1,1]
-    elif grid[spot] == "r": 
-        rngj = [1]
-    elif grid[spot] == "b":
-        rngj = [-1]
-    for i in rngi:
-        for j in rngj:
-            check = (spot[0]+i,spot[1]+j)
-            oc = otherColor(grid[spot])
-            if isRealSpot(check):
-                if grid[check] == "N": #nothing there and we aren't just checking for jumps
-                    res = makeTurn(spot,check)
-                    if res[0]:
-                        moves.append([False,spot,check])
-                elif grid[check] == oc: #a possible jump
-                    #checking if the piece is jumpable
-                    landing = (2*check[0]-spot[0],2*check[1]-spot[1])
-                    if isRealSpot(landing) and grid[landing] == "N": #nothing in the landing square
-                        #it is good, add it to the array
-                        jumps.append([True,grid[spot],spot,check])
-    if len(jumps) > 0:
-        return jumps
-    else:
-        return moves
-
+    return result
 
 def allPosibleMoves (color,onlyJump=False):
     allMoves = []
     jumps = []
     for row in range(8):
         for col in range(8):
-            start = (row,col)
-            if grid[start] != color: #not on the right square
-                continue
-             #check all the boxes and the boxes around them
-            rngi = [-1,1]
-            if grid[start] == grid[start].upper(): #it is a king
-                rngj = [-1,1]
-            elif grid[start] == "r": 
-                rngj = [1]
-            elif grid[start] == "b":
-                rngj = [-1]
-            for i in rngi:
-                for j in rngj:
-                    check = (row+i,col+j)
-                    oc = otherColor(grid[start])
-                    if isRealSpot(check):
-                        if grid[check] == "N" and not onlyJump: #nothing there and we aren't just checking for jumps
-                            res = makeTurn(start,check)
-                            if res[0]:
-                                allMoves.append([start,check])
-                        elif grid[check] == oc: #a possible jump
-                            #checking if the piece is jumpable
-                            landing = (2*check[0]-start[0],2*check[1]-start[1])
-                            if isRealSpot(landing) and grid[landing] == "N": #nothing in the landing square
-                                #it is good, add it to the array
-                                jumps.append([grid[start],start,check])
+            if (grid[(row,col)].lower() == color):
+                king = grid[(row,col)] == grid[(row,col)].upper()
+                moves = checkForJump(color,(row,col),king)
+                for i in moves:
+                    allMoves.append(i)
+            
+    return allMoves
 
-    if len(jumps) > 0 or onlyJump:
-        return jumps
-    else:
-        return allMoves
+def checkForJump(color,spot,king):
+    allMoves = []
+    rngi = [-1,1]
+    if king:
+        rngj = [-1,1]
+    elif color == "r":
+        rngj = [1]
+    elif color == "b":
+        rngj = [-1]
     
+    for i in rngi:
+        for j in rngj:
+            check = (spot[0]+i,spot[1]+j)
+            oc = otherColor(color)
+            #compare spot and check
+            res = checkMove(spot,check)
+            if res["valid"]:
+                allMoves.append(res)
+    return allMoves
+
+def checkMove (start,end): 
+    #if a jump is aviliable, then you must make it
+    result = {}
+    result["start"] = start
+    result["end"] = end
+    result["valid"] = False
+    result["jump"] = False
+
+    if (not isRealSpot(start) or not isRealSpot(end)):
+        result["error"] = "Not a real spot"
+        return result
+    
+    if (start[0]+start[1])%2 != (end[0]+end[1])%2: #check if they are not diagonal
+        result["error"] = "Not on Diagonal"
+        return result
+    if abs(end[0]-start[0]) > 1: #too far away in the x-dir
+        result["error"] = "Too far away in the X direction"
+        return result
+    
+    if grid[start].upper() == grid[start]: #if they are a king
+        if (abs(end[1]-start[1]) > 1): #too far away in the y-dir
+            result["error"] = "Too far away in the Y direction"
+            return result
+    else: #if they are not a king
+        if (end[1]-start[1] != 1 and grid[start].lower() == "r"):
+            result["error"] = "Can't go backwards"
+            return result
+        elif (end[1]-start[1] != -1 and grid[start].lower() == "b"):
+            result["error"] = "Can't go backwards"
+            return result
+    if grid[end] == grid[start]: #The colors are the same, so you can't play there
+        result["error"] = "Can't jump your own Pieces"
+        return result
+
+    #this is an array of values that will be replaced with "N", meaning we are deleting the piece in them
+    result["spotsToRemove"] = []
+    
+    if (grid[end] == "N"): #not jumping over piece
+        dropSpot = end
+    else: #juming over piece
+        dropSpot = (2*end[0]-start[0],2*end[1]-start[1]) #jump over
+        if not isRealSpot(dropSpot):
+            result["error"] = "Can't jump off board"
+            return result
+        elif grid[dropSpot] != "N": #Can't jump, piece on other side
+            result["error"] = "That jump is blocked"
+            return result
+        #jump was good
+        result["jump"] = True
+        result["drop"] = dropSpot
+        result["spotsToRemove"].append(end)
+
+
+    result["spotsToRemove"].append(start)
+    result["drop"] = dropSpot
+    result["valid"] = True
+    return result
 
 
 #=============================================
@@ -217,6 +216,7 @@ while not done:
     if pygame.mouse.get_pressed()[0] and not mousePressed: #mouse is down, for the first time
         mousePressed = True
         
+
         pos = pygame.mouse.get_pos()
         #check where click happened;
         clickedSquare = (math.floor(pos[0]/(size[0]/8)),math.floor(pos[1]/(size[1]/8)))
@@ -236,23 +236,21 @@ while not done:
 
             #call the main function to see if this placement is valid
             res = makeTurn(selected,clickedSquare)
-            
-            if res[0]: #if the move was sucsessful
+            print(res)
+
+            if res["valid"]: #if the move was sucsessful
                 
                 #set the new spot equal to the correct color
-                newSpot = res[1]
+                newSpot = res["drop"]
                 grid[newSpot] = grid[selected]
                 
                 #check if the newSquare is a king
                 if grid[newSpot] == "r" and newSpot[1] == 7: #if it is red and on the bottom row
                     grid[newSpot] = "R" #King Them
-                    print("kinged")
                 elif grid[newSpot] == "b" and newSpot[1] == 0: #if it is black and on the top row
                     grid[newSpot] = "B" #King Them
-                    print("kinged")
-                
                 #loop through the spots that need deleted
-                for spot in res[2]: 
+                for spot in res["spotsToRemove"]: 
                     grid[spot] = "N"
                 
                 #unselect square
@@ -260,13 +258,11 @@ while not done:
                 
                 #change the turn
                 turn = otherColor(turn)
-
-                print("Possible Moves: ", allPosibleMoves(turn))
                 
             else: #the move was invalid
                 
                 #print the error
-                print(res[2])
+                print(res["error"])
                 
     elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
         mousePressed = False
