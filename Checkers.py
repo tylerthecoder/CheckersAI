@@ -50,6 +50,22 @@ djSpot = (-1,-1) #used to store if there was a dj last turn
 #            Player Function
 #==============================================
 
+#Other functions to help
+
+#gr.makeTurn
+#This functions makes sure the move you have follows all the rules (execpt dj, still working on that)
+#It will return a dict and dict["valid"] will be false if it didn't work
+#Params (Starting Spot, Ending Spot, The Turn, The Grid)
+
+#gr.allPosibleMoves
+#This function will return all the moves on the board that are valid
+#Params (Which color you want to check for, The Grid)
+
+#gr.checkMove
+#This function will tell you if a starting and ending spot will result in a valid move
+#Params (Start Spot, End Spot, Grid)
+
+
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
 def RedPlayer(click):
     global selected
@@ -74,7 +90,7 @@ def BlackPlayer():
     move = random.choice(allMoves)
     res = gr.makeTurn(move["start"],move["end"],"b",grid)
     count = 0 #in case we get an infinite loop somehow
-    while not res["valid"]:
+    while not res["valid"]: #keep trying until we get a valid move
         count = count + 1
         move = random.choice(allMoves)
         res = gr.makeTurn(move["start"],move["end"],"b",grid)
@@ -100,11 +116,25 @@ while not done:
         #check where click happened;
         clickedSquare = (math.floor(pos[0]/(size[0]/8)),math.floor(pos[1]/(size[1]/8)))
         
+        #call player functions
         if turn == "r":
             res = RedPlayer(clickedSquare)
+            #res = BlackPlayer()
         elif turn == "b":
             res = BlackPlayer()
         
+        #res will return False if something bad happened or a dict if everything worked
+        #Dictionary Keys
+        #start: The spot the piece started at
+        #end: The spot the user selected, not necessarily the spot the piece ended on
+        #drop: This is the spot the piece ended on
+        #spotsToRemove: a list of spots that were jumped or need to be taken off the board
+        #jump: If the move was a jump
+        #valid: If the move worked, should always be true
+
+
+        #            Make Move
+        #==================================
         if res:
             #check if there was a dj that needed to happen
             if djSpot != (-1,-1):
@@ -123,9 +153,7 @@ while not done:
             #unselect square
             selected = (-1,-1)
             
-            #change the turn
             #is there a dj on the board?
-            
             dj = False
             moves = gr.allPosibleMoves(turn,grid)
             if res["jump"]:
@@ -133,7 +161,8 @@ while not done:
                     if move["jump"] and move["start"] == res["drop"]: #there is a dj
                         dj = True
                         djSpot = res["drop"]
-
+            
+            #if no dj, then change the turn
             if not dj:
                 turn = gr.otherColor(turn)
                 

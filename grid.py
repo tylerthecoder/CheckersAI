@@ -85,11 +85,12 @@ def checkForJump(color,spot,king,grd):
 
 def checkMove (start,end,grd): 
     #if a jump is aviliable, then you must make it
-    result = {}
-    result["start"] = start
-    result["end"] = end
-    result["valid"] = False
-    result["jump"] = False
+    result = {
+        "start":start,
+        "end":end,
+        "valid":False, #init this to be false until it gets to the end
+        "jump":False
+    }
 
     if (not isRealSpot(start) or not isRealSpot(end)):
         result["error"] = "Not a real spot"
@@ -113,7 +114,7 @@ def checkMove (start,end,grd):
         elif (end[1]-start[1] != -1 and grd[start].lower() == "b"):
             result["error"] = "Can't go backwards"
             return result
-    if grd[end] == grd[start]: #The colors are the same, so you can't play there
+    if grd[end].lower() == grd[start].lower(): #The colors are the same, so you can't play there
         result["error"] = "Can't jump your own Pieces"
         return result
 
