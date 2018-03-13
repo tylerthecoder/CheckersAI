@@ -15,7 +15,8 @@ def makeTurn(start,end,turn,grd):
     result = {
         "valid":True,
         "changeTurn":True,
-        "error":""
+        "error":"",
+        "jump":False
     }
     
     #find all moves that are possible
@@ -43,19 +44,11 @@ def makeTurn(start,end,turn,grd):
     
     result["spotsToRemove"] = myMove["spotsToRemove"]
     result["drop"] = myMove["drop"]
-
-    #check for double jump
-    if myMove["jump"]:
-        king = grd[start] == grd[start].upper()
-        moves = checkForJump(turn,myMove["drop"],king,grd)
-        dj = False
-        for move in moves:
-            if move["jump"]:
-                dj = True
-        if dj:
-            result["changeTurn"] = False
+    result["start"] = myMove["start"]
+    result["jump"] = myMove["jump"]
 
     return result
+
 
 def allPosibleMoves (color,grd):
     allMoves = []
@@ -85,7 +78,8 @@ def checkForJump(color,spot,king,grd):
             oc = otherColor(color)
             #compare spot and check
             res = checkMove(spot,check,grd)
-            allMoves.append(res)
+            if res["valid"]:
+                allMoves.append(res)
 
     return allMoves
 

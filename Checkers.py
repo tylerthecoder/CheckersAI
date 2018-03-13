@@ -6,6 +6,7 @@
 
 import pygame
 import math
+import random
 
 import grid as gr
 
@@ -43,6 +44,7 @@ clock = pygame.time.Clock() # Used to manage how fast the screen updates
 mousePressed = True #variable to make the mouse click only happen when mouse is clicked up and then down
 turn = "r"
 done = False
+djSpot = (-1,-1) #used to store if there was a dj last turn
 
 #==============================================
 #            Player Function
@@ -68,7 +70,18 @@ def RedPlayer(click):
     
 
 def BlackPlayer():
-    print("Tracy")
+    allMoves = gr.allPosibleMoves("b",grid)
+    move = random.choice(allMoves)
+    res = gr.makeTurn(move["start"],move["end"],"b",grid)
+    count = 0 #in case we get an infinite loop somehow
+    while not res["valid"]:
+        count = count + 1
+        move = random.choice(allMoves)
+        res = gr.makeTurn(move["start"],move["end"],"b",grid)
+        if count > 100:
+            print("something went wrong")
+            break
+    return res
 
 
 
@@ -90,13 +103,18 @@ while not done:
         if turn == "r":
             res = RedPlayer(clickedSquare)
         elif turn == "b":
-            res = RedPlayer(clickedSquare)
+            res = BlackPlayer()
         
         if res:
-
+            #check if there was a dj that needed to happen
+            if djSpot != (-1,-1):
+                if djSpot != res["start"]:
+                    print("You have to continue the jump")
+                    continue
+                djSpot = (-1,-1)
+            
             #set the new spot equal to the correct color
-            newSpot = res["drop"]
-            grid[newSpot] = grid[selected]
+            grid[res["drop"]] = grid[res["start"]]
             
             #loop through the spots that need deleted
             for spot in res["spotsToRemove"]: 
@@ -106,12 +124,18 @@ while not done:
             selected = (-1,-1)
             
             #change the turn
-            if res["changeTurn"]:
+            #is there a dj on the board?
+            
+            dj = False
+            moves = gr.allPosibleMoves(turn,grid)
+            if res["jump"]:
+                for move in moves:
+                    if move["jump"] and move["start"] == res["drop"]: #there is a dj
+                        dj = True
+                        djSpot = res["drop"]
+
+            if not dj:
                 turn = gr.otherColor(turn)
-            else:
-                print("There is a double jump")
-
-
                 
     elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
         mousePressed = False
