@@ -6,7 +6,10 @@
 
 import pygame
 import math
- 
+import random
+
+import grid as gr
+
 #Define some colors
 black = (0, 0, 0)
 yellow = (255, 255, 0)
@@ -18,92 +21,85 @@ pygame.init()
     
 # Set the width and height of the screen [width, height]
 size = (700, 700)
-squareLength = math.floor(size[0]/8);
+squareLength = math.floor(size[0]/8)
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption("Checkers")    
 
 #creating the grid array
-grid = []
+
+grid = {}
 for col in range(8):
-    grid.append([]);
     for row in range(8):
-        if row < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
-            grid[col].append("r"); #set the square to be red
-        elif row > 4 and (row+col)%2 == 0:
-            grid[col].append("b"); #set the square to be black
+        if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
+            char = "r" #set the square to be red
+        elif col > 4 and (row+col)%2 == 0:
+            char = "b" #set the square to be black
         else:
-            grid[col].append("N"); #set the square to be empty
+            char = "N" #set the square to be empty
+        
+        grid[(row,col)] = char
+
 
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
-selected = (-1,-1) #this stores the value of the grid square that is currently selected
 mousePressed = True #variable to make the mouse click only happen when mouse is clicked up and then down
 turn = "r"
 done = False
+djSpot = (-1,-1) #used to store if there was a dj last turn
 
 #==============================================
-#            Helper FUnctions
+#            Player Function
 #==============================================
 
-def otherColor(color):
-    if color == "r":
-        return "b"
-    if color == "b":
-        return "r"
+#Other functions to help
 
-#function to save some typing
-def grd(t):
-    return grid[t[0]][t[1]]
+#gr.makeTurn
+#This functions makes sure the move you have follows all the rules (execpt dj, still working on that)
+#It will return a dict and dict["valid"] will be false if it didn't work
+#Params (Starting Spot, Ending Spot, The Turn, The Grid)
 
-        
-#This function was written to not modify any data. 
-#This way, when the AI if checking possible moves, it can use this to see the state of the board without altering it
-def makeTurn(startSpot,endSpot):
-    #return values
-    #Array(3)
-    #Index 1: True/False for if the jump is valid
-    #Index 2: If True, then return new location of the piece
-    #         If False, then return error number
-    #Index 3: If True Array of indices to destroy
-    #         If False, String Describing error
-   
-    if grd(startSpot).lower() != turn: #wrong player
-        return [False,0,"Wrong Player"]
+#gr.allPosibleMoves
+#This function will return all the moves on the board that are valid
+#Params (Which color you want to check for, The Grid)
+
+#gr.checkMove
+#This function will tell you if a starting and ending spot will result in a valid move
+#Params (Start Spot, End Spot, Grid)
+
+
+selected = (-1,-1) #this stores the value of the grid square that is currently selected
+def RedPlayer(click):
+    global selected
+    if selected == (-1,-1):
+        if grid[click].lower() == turn:
+            selected = click
+        else:
+            print("Wrong Turn")
+    elif selected == click:
+        selected = (-1,-1)
+    else:
+        res = gr.makeTurn(selected,clickedSquare,turn,grid)
+        if res["valid"]: #if the move was sucsessful
+            return res
+        else:
+            print(res["error"])
+            return False
     
-    if (startSpot[0]+startSpot[1])%2 != (endSpot[0]+endSpot[1])%2: #check if they are not diagonal
-        return [False,1,"Not on Diagonal"]
-    if abs(endSpot[0]-startSpot[0]) > 1: #too far away in the x-dir
-        return [False,2,"Too far way in x-dir"]
-    
-    if grd(startSpot).upper() == grd(startSpot): #if they are a king
-        if (abs(endSpot[1]-startSpot[1]) > 1): #too far away in the y-dir
-            return [False,3,"Too far way in y-dir"]
-    else: #if they are not a king
-        if (endSpot[1]-startSpot[1] != 1 and grd(startSpot).lower() == "r"):
-            return [False,4,"Can't Go Backwards"]
-        elif (endSpot[1]-startSpot[1] != -1 and grd(startSpot).lower() == "b"):
-            return [False,4,"Can't Go Backwards"]
-    
-    if grd(endSpot) == grd(startSpot): #The colors are the same, so you can't play there
-        return [False,5,"Can't Jump your own Pieces"]
 
-    #this is an array of values that will be replaced with "N", meaning we are deleting the piece in them
-    removeSpots = [];
-    
-    if (grd(endSpot) == "N"): #not jumping over piece
-        dropSpot = endSpot
-    else: #juming over piece
-        dropSpot = (2*endSpot[0]-startSpot[0],2*endSpot[1]-startSpot[1]) #jump over
-        if dropSpot[0] == -1 or dropSpot[0] == 8 or dropSpot[1] == -1 or dropSpot[1] == 8:
-            return [False,6,"Can't Jump off board"]
-        if grd(dropSpot) != "N": #Can't jump, piece on other side
-            return [False,7,"That Jump is blocked"]
-        removeSpots.append(endSpot)
+def BlackPlayer():
+    allMoves = gr.allPosibleMoves("b",grid)
+    move = random.choice(allMoves)
+    res = gr.makeTurn(move["start"],move["end"],"b",grid)
+    count = 0 #in case we get an infinite loop somehow
+    while not res["valid"]: #keep trying until we get a valid move
+        count = count + 1
+        move = random.choice(allMoves)
+        res = gr.makeTurn(move["start"],move["end"],"b",grid)
+        if count > 100:
+            print("something went wrong")
+            break
+    return res
 
 
-    removeSpots.append(startSpot)
-    return [True,dropSpot,removeSpots]
-        
-        
 
 #=============================================
 #           Main Program Loop
@@ -115,58 +111,63 @@ while not done:
             done = True
     
     if pygame.mouse.get_pressed()[0] and not mousePressed: #mouse is down, for the first time
-        mousePressed = True;
-        
-        pos = pygame.mouse.get_pos();
+        mousePressed = True
+        pos = pygame.mouse.get_pos()
         #check where click happened;
         clickedSquare = (math.floor(pos[0]/(size[0]/8)),math.floor(pos[1]/(size[1]/8)))
+        
+        #call player functions
+        if turn == "r":
+            res = RedPlayer(clickedSquare)
+            #res = BlackPlayer()
+        elif turn == "b":
+            res = BlackPlayer()
+        
+        #res will return False if something bad happened or a dict if everything worked
+        #Dictionary Keys
+        #start: The spot the piece started at
+        #end: The spot the user selected, not necessarily the spot the piece ended on
+        #drop: This is the spot the piece ended on
+        #spotsToRemove: a list of spots that were jumped or need to be taken off the board
+        #jump: If the move was a jump
+        #valid: If the move worked, should always be true
 
-        #logic for selecting thing
-        if selected[0] == -1: #if nothing is selected
+
+        #            Make Move
+        #==================================
+        if res:
+            #check if there was a dj that needed to happen
+            if djSpot != (-1,-1):
+                if djSpot != res["start"]:
+                    print("You have to continue the jump")
+                    continue
+                djSpot = (-1,-1)
             
-            if grd(clickedSquare).lower() == turn: #make sure it is your turn
-                selected = clickedSquare;
-            elif grd(clickedSquare).lower() == otherColor(turn): #not your turn
-                print("Not your turn")
-
-        elif selected == clickedSquare: #if you click the same spot then deselect
+            #set the new spot equal to the correct color
+            grid[res["drop"]] = grid[res["start"]]
+            
+            #loop through the spots that need deleted
+            for spot in res["spotsToRemove"]: 
+                grid[spot] = "N"
+            
+            #unselect square
             selected = (-1,-1)
-        else: #Try to place the piece there
             
-            #call the main function to see if this placement is valid
-            res = makeTurn(selected,clickedSquare)
+            #is there a dj on the board?
+            dj = False
+            moves = gr.allPosibleMoves(turn,grid)
+            if res["jump"]:
+                for move in moves:
+                    if move["jump"] and move["start"] == res["drop"]: #there is a dj
+                        dj = True
+                        djSpot = res["drop"]
             
-            if res[0]: #if the move was sucsessful
-                
-                #set the new spot equal to the correct color
-                newSpot = res[1];
-                grid[newSpot[0]][newSpot[1]] = grd(selected);
-                
-                #check if the newSquare is a king
-                if grd(newSpot) == "r" and newSpot[1] == 7: #if it is red and on the bottom row
-                    grid[newSpot[0]][newSpot[1]] = "R" #King Them
-                    print("kinged")
-                elif grd(newSpot) == "b" and newSpot[1] == 0: #if it is black and on the top row
-                    grid[newSpot[0]][newSpot[1]] = "B" #King Them
-                    print("kinged")
-                
-                #loop through the spots that need deleted
-                for spot in res[2]: 
-                    grid[spot[0]][spot[1]] = "N"
-                
-                #unselect square
-                selected = (-1,-1)
-                
-                #change the turn
-                turn = otherColor(turn)
-                
-            else: #the move was invalid
-                
-                #print the error
-                print(res[2])
+            #if no dj, then change the turn
+            if not dj:
+                turn = gr.otherColor(turn)
                 
     elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
-        mousePressed = False;
+        mousePressed = False
     
     #=================================================
     #              Drawing code
@@ -182,27 +183,32 @@ while not done:
     #draw the grid
     for i in range(0,8):
         for j in range(0,8):
-            squareX = i*squareLength;
-            squareY = j*squareLength;
-            
-            if selected[0] == i and selected[1] == j:
+            spot = (i,j)
+            #check for kinging
+            if grid[spot] == "r" and spot[1] == 7: #if it is red and on the bottom row
+                grid[spot] = "R" #King Them
+            elif grid[spot] == "b" and spot[1] == 0: #if it is black and on the top row
+                grid[spot] = "B" #King Them
+
+
+            squareX = i*squareLength
+            squareY = j*squareLength
+            if selected == (i,j):
                 pygame.draw.rect(screen,green,[squareX,squareY,squareLength,squareLength])
             
             circleX = math.floor(i*squareLength+squareLength/2)
             circleY = math.floor(j*squareLength+squareLength/2)
-            radius = math.floor(size[0]/32);
+            radius = math.floor(size[0]/32)
             
-            if grid[i][j].lower() == "r":
-                pygame.draw.circle(screen, red, [circleX, circleY], radius);
-            elif grid[i][j].lower() == "b":
-                pygame.draw.circle(screen, black, [circleX, circleY], radius);
+            if grid[(i,j)].lower() == "r":
+                pygame.draw.circle(screen, red, [circleX, circleY], radius)
+            elif grid[(i,j)].lower() == "b":
+                pygame.draw.circle(screen, black, [circleX, circleY], radius)
             
             #draw if it is a king
-            if grid[i][j] == grid[i][j].upper() and grid[i][j] != "N":
+            if grid[(i,j)] == grid[(i,j)].upper() and grid[(i,j)] != "N":
                 pygame.draw.circle(screen,yellow,[circleX,circleY],math.floor(radius/4))
                 
-                
- 
     #Go ahead and update the screen with what we've drawn.
     pygame.display.flip()
  
