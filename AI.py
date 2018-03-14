@@ -44,8 +44,18 @@ class AI:
         return score
 
 
-
-
+"""
+AI Steps:
+1) Get all possible jumps
+    1a) if none, get all possible moves
+2) Get score for each team, based on current board state
+3) Try each move (by making local copy of board inside a function?) and get score difference (AI newtotal - player newtotal) if made
+4) store 4 best moves somewhere (best move == highest score difference after making the move)
+5) choose a move (semi-random: probability based on how good the move is)
+6) do the move
+7) if another jump(s) can be made, do that.
+8) end turn
+"""
 
 # DEBUG==================
 #

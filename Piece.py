@@ -165,27 +165,3 @@ class Piece:
                 Piece.King(p)
 
         return board
-
-    def Done():
-        """
-        This Function checks the number of remaining pieces for each team.
-
-        It also checks the number of moves made total by both players.
-        If either player runs out of pieces, or more than 50 moves are made, the game ends.
-        """
-        move_count = 1
-        done = False
-
-        while not done:
-            if Piece.red_pieces == []:
-                done = True
-                print('Black Team Wins!')
-            elif Piece.black_pieces == []:
-                done = True
-                print('Red Team Wins!')
-            elif move_count >= 50:
-                done = True
-                print('Too many moves! The game is a draw!')
-            print(move_count)
-            yield done
-            move_count += 1
