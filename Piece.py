@@ -1,6 +1,6 @@
 class Piece:
-    red_pieces = []
-    black_pieces = []
+    pieces = {('r','R') : [],                                                   # it may be helpful to store pieces in a dictionary (e.g. {('r','R') : [pieces], ('b','B') : [pieces]} ), as this would allow direct access using OtherColor().
+              ('b','B') : []}                                                   # These dictionaries may also be able to have keys of just one character.
 
     # Moves
     NK_MOVES_R = ((-1, 1), (-1, -1))                                            # Moves for non-king red pieces
@@ -11,36 +11,24 @@ class Piece:
     def __init__(self, color, pos):
         self.color = color
         self.pos = pos
+        self.jumped = False
 
         if self.color == 'r':                                                   #A Normal Red Piece
             self.moves = Piece.NK_MOVES_R
-            Piece.red_pieces.append(self)
+            Piece.pieces[('r','R')].append(self)
 
         elif self.color == 'b':                                                 #A Normal Black Piece
             self.moves = Piece.NK_MOVES_B
-            Piece.black_pieces.append(self)
-
-# Could probably get rid of these, since we never create new King pieces.
-        elif self.color == 'R':                                                 #A Red King
-            self.moves = Piece.K_MOVES
-            Piece.red_pieces.append(self)
-
-        elif self.color == 'B':                                                 #A Black King
-            self.moves = Piece.K_MOVES
-            Piece.black_pieces.append(self)
+            Piece.pieces[('b','B')].append(self)
 
         else: print("Not a valid color for a piece.")
 
     def RemovePiece(self, board):
         """Deletes a piece from the board and list of pieces."""
 
-        board[self.pos[0]][self.pos[1]] = 'N'                                   # Could use OnBoard function
-
-        if self in Piece.red_pieces:
-            Piece.red_pieces.remove(self)
-        elif self in Piece.black_pieces:
-            Piece.black_pieces.remove(self)
-
+        board[self.pos[0]][self.pos[1]] = 'N'
+        self.jumped = True                                                      # Don't actually delete the object, because it may be needed in the UndoJump() function.
+                                                                                # Instead, it is tagged as 'jumped', which will be checked by Done().
         return board
 
     def OtherColor(self):
@@ -76,7 +64,8 @@ class Piece:
         for piece in piece_list:
             jumps = Piece.IsJump(piece, board)
             if jumps[1] != []:
-                all_jumps.append(jumps)
+                for jump in jumps[1]:
+                    all_jumps.append( (piece, jump) )
 
         return all_jumps
 
@@ -95,6 +84,24 @@ class Piece:
         self.pos[0] += 2 * jump[0]                                              # Set new position for jumping piece.
         self.pos[1] += 2 * jump[1]
         board[self.pos[0]][self.pos[1]] = self
+
+        return board
+
+    def UndoJump(self, jump, board):                                            # Right now, this and the UndoMove function are necessary to test moves. Ideally, we should be able to test moves/jumps without modifying and undoing changes to the board.
+        """This function does the opposite of the DoJump function.
+
+        It returns the board to its original state, before the given jump was performed."""
+
+        board[self.pos[0]][self.pos[1]] = 'N'
+        self.pos[0] += 2 * jump[0]                                              # Set new position for jumping piece.
+        self.pos[1] += 2 * jump[1]
+        board[self.pos[0]][self.pos[1]] = self
+
+        jumped_pos = [self.pos[0] + jump[0], self.pos[1] + jump[1]]
+        for piece in pieces[OtherColor(self.color)]:
+            if piece.pos == jumped_pos:
+                board[jumped_pos[0]][jumped_pos[1]] = piece
+                piece.jumped = False
 
         return board
 
@@ -122,7 +129,8 @@ class Piece:
         for piece in piece_list:
             moves = Piece.IsMove(piece, board)
             if moves[1] != []:
-                all_moves.append(moves)
+                for move in moves[1]:
+                    all_moves.append( (piece, move) )
 
         return all_moves
 
@@ -138,6 +146,19 @@ class Piece:
         board[self.pos[0]][self.pos[1]] = self                                  # Move piece to new position on board
 
         return board
+
+    def UndoMove(self, move, board):
+        """This function does the opposite of the DoMove function.
+
+        It returns the board to its original state, before the given move was performed."""
+
+        board[self.pos[0]][self.pos[1]] = 'N'
+        self.pos[0] -= move[0]
+        self.pos[1] -= move[1]
+        board[self.pos[0]][self.pos[1]] = self
+
+        return board
+
 
     def King(self):
         """This function changes a normal piece into a kinged piece, updating its color label and moves."""
@@ -165,3 +186,27 @@ class Piece:
                 Piece.King(p)
 
         return board
+
+    def Done(max_moves = 50):
+        """
+        This Function checks the number of remaining pieces for each team.
+
+        It also checks the number of moves made total by both players.
+        If either player runs out of pieces, or more than 50 moves are made, the game ends.
+        """
+        move_count = 0
+        done = False
+
+        while not done:
+            move_count += 1
+            if all(Piece.pieces[('r','R')].jumped):
+                done = True
+                print('Black Team Wins!')
+            elif all(Piece.pieces[('b','B')].jumped):
+                done = True
+                print('Red Team Wins!')
+            elif move_count >= max_moves:
+                done = True
+                print('Too many moves! The game is a draw!')
+
+            yield done

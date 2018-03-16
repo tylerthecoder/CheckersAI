@@ -3,7 +3,7 @@
 
 import pygame
 import random
-from BoardFunctions import CreateBoard, OnBoard, Done
+from BoardFunctions import CreateBoard
 from AI import AI
 from Piece import Piece
 
@@ -16,7 +16,7 @@ GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 
 # Move counter
-game_status = Done(Piece.red_pieces, Piece.black_pieces)                       # Basically what the move counter will look like.
+game_status = Piece.Done()                                                      # Basically what the move counter will look like.
 done = False
 
 
@@ -26,10 +26,13 @@ done = False
 
 #DEBUG ============================
 BOARD = CreateBoard()
-moves = Piece.GetAllMoves(Piece.red_pieces, BOARD)
+moves = Piece.GetAllMoves(Piece.pieces[('r','R')], BOARD)
 for move in moves:
-    print(move)
-#
+    print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
+
+
+
+
 for row in BOARD:
     print(row)
 

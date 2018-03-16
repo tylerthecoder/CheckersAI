@@ -37,27 +37,3 @@ def CreateBoard():
                     else: board[row][col] = 'N'
 
     return board
-
-def Done(team1_pieces, team2_pieces, max_moves = 50):
-    """
-    This Function checks the number of remaining pieces for each team.
-
-    It also checks the number of moves made total by both players.
-    If either player runs out of pieces, or more than 50 moves are made, the game ends.
-    """
-    move_count = 0
-    done = False
-
-    while not done:
-        move_count += 1
-        if team1_pieces == []:
-            done = True
-            print('Black Team Wins!')
-        elif team2_pieces == []:
-            done = True
-            print('Red Team Wins!')
-        elif move_count >= max_moves:
-            done = True
-            print('Too many moves! The game is a draw!')
-        
-        yield done

@@ -1,7 +1,7 @@
 # This File contains the AI for CheckersV2.py. The AI for this program is a
 # weighted-random decision making algorithm based off an array of board-position scores.
 import random
-from BoardFunctions import OnBoard
+from Piece import Piece
 
 class AI:
 
@@ -43,13 +43,58 @@ class AI:
 
         return score
 
+    def GetTeamScore(piece_list):
+        """This function calls the ValuatePiece function on each of a team's pieces, and returns the sum of all scores."""
+
+        total = 0
+        for piece in piece_list:
+            total += AI.ValuatePiece(piece.color, piece.pos)
+        return total
+
+    def MoveScoring(moving_piece, move, current_piece_list, board):
+        """This function calculates how much a team's score will change if it makes a given move.
+
+        It returns a tuple containing (piece_moved, move_made, score_change)."""
+
+        current_team_init_score = AI.GetTeamScore(current_piece_list)
+
+        board_after_move = Piece.DoMove(moving_piece, move, board) # This won't work. It changes the actual board.
+
+        current_team_final_score = AI.GetTeamScore(current_piece_list)
+
+        score_dif = current_team_final_score - current_team_init_score
+
+        Piece.UndoMove(moving_piece, move, board)
+
+        return (moving_piece, move, score_dif)
+
+    def JumpScoring(jumping_piece, jump, current_piece_list, other_piece_list, board):
+        """This function calculates the total relative change in scores between both teams if a given jump is made.
+
+        Score differential is calculated as (jumping_team_score_change) - (jumped_team_score_change).
+        Returns a tuple containing (jumping_piece, jump_made, score_change)."""
+
+        current_team_init_score = AI.GetTeamScore(current_piece_list)
+        other_team_init_score = AI.GetTeamScore(other_piece_list)
+
+        board_after_move = Piece.DoJump(jumping_piece, jump, board) # Similar to above, this changes the actual board. Not ideal.
+
+        current_team_final_score = AI.GetTeamScore(current_piece_list)
+        other_team_final_score = AI.GetTeamScore(other_piece_list)
+
+        score_dif = (current_team_final_score - current_team_init_score) - (other_team_final_score - other_team_init_score)
+
+        Piece.UndoJump(jumping_piece, jump, board)
+
+        return (jumping_piece, jump, score_dif)
 
 """
 AI Steps:
 1) Get all possible jumps
     1a) if none, get all possible moves
 2) Get score for each team, based on current board state
-3) Try each move (by making local copy of board inside a function?) and get score difference (AI newtotal - player newtotal) if made
+3) Try each move (by making local copy of board inside a function?) and get score difference (AI newtotal - player newtotal) if made.
+    This could be challenging, as it needs to be done without altering the board, ideally.
 4) store 4 best moves somewhere (best move == highest score difference after making the move)
 5) choose a move (semi-random: probability based on how good the move is)
 6) do the move
