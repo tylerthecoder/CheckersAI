@@ -6,7 +6,7 @@ class Piece:
     NK_MOVES_R = ((-1, 1), (-1, -1))                                            # Moves for non-king red pieces
     NK_MOVES_B = ((1, 1), (1, -1))                                              # Moves for non-king black pieces
     K_MOVES = ((-1, 1), (-1, -1), (1, 1), (1, -1))                              # Moves for all kinged pieces
-    JUMPS = ((-2, 2), (-2, -2), (2, 2), (2, -2)) # Needed?                      # Jumps for all pieces (Order: Up-Right, Up-Left, Down-Right, Down-Left)
+    
 
     def __init__(self, color, pos):
         self.color = color
