@@ -4,7 +4,6 @@
 import pygame
 import random
 from BoardFunctions import CreateBoard
-from AI import AI
 from Piece import Piece
 
 
@@ -16,10 +15,7 @@ GREEN = (0, 255, 0)
 YELLOW = (255, 255, 0)
 
 # Move counter
-game_status = Piece.Done()                                                      # Basically what the move counter will look like.
-done = False
-
-
+done = Piece.Done()
 
 
 
@@ -27,25 +23,33 @@ done = False
 #DEBUG ============================
 BOARD = CreateBoard()
 moves = Piece.GetAllMoves(Piece.pieces[('r','R')], BOARD)
-for move in moves:
-    print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
+# for move in moves:
+    # print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
 
+print(Piece.ValuatePiece(moves[0][0], BOARD))
+Piece.DoMove(moves[0][0], moves[0][1], BOARD)
 
+moves = Piece.GetAllMoves(Piece.pieces[('r','R')], BOARD)
 
+# for move in moves:
+#     print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
+print(Piece.ValuatePiece(moves[0][0], BOARD))
+Piece.DoMove(moves[0][0], moves[0][1], BOARD)
 
-for row in BOARD:
-    print(row)
-
-# SCORE = 0
-# for p in Piece.black_pieces:
-#     SCORE += AI.ValuatePiece(p.color, p.pos)
-# print(SCORE)
+print(Piece.Jumpable(moves[0][0], BOARD))
+print(Piece.ValuatePiece(moves[0][0], BOARD))
 
 # for row in BOARD:
 #     print(row)
+
+# SCORE = 0
+# for p in Piece.pieces[('b','B')]:
+#     SCORE += AI.ValuatePiece(p.color, p.pos)
+# print(SCORE)
+
 #==================================
 
 # while not done:
 #     #pygame.init()
-#     if next(game_status):
-#         done = True
+#     next(done)                                                                  # Checks if either team has won, and increments move counter.
+#

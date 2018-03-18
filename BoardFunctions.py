@@ -3,7 +3,8 @@ from Piece import Piece
 def OnBoard(pos, board):                                                        # TODO: Not sure how/if I want to utilize this function. It may create some strange dependencies.
     """This function returns the value of the provided position on whatever board is passed as an argument.
 
-    The position is passed as a list or tuple."""
+    The position is passed as a list or tuple.
+    NOTE: This function is currently unused."""
 
     return board[pos[0]][pos[1]]
 

@@ -23,23 +23,24 @@ class AI:
     # Score array for black pieces
     SCORE_ARRAY_2 = list(reversed(SCORE_ARRAY_1))                               # score_array_1 upside down
 
-    def ValuatePiece(color, pos):
+    def ValuatePiece(piece):
         """This function sets the score for a single piece.
 
-        It is passed the type (color char) and position (list) of a piece, and returns its point-value, as determined by the score array for its color."""
+        It is passed the piece to check, and returns its point-value, as determined by the score array for its color."""
+        pos = piece.pos
+        color = piece.color
 
-        try:
-            if color == 'r':
-                score = AI.PIECE_VALUE + AI.SCORE_ARRAY_1[pos[0]][pos[1]]
-            elif color == 'b':
-                score = AI.PIECE_VALUE + AI.SCORE_ARRAY_2[pos[0]][pos[1]]
-            elif color == 'R':
-                score = AI.KING_VALUE                                           # Board position doesn't matter as much for kings -- their job is to jump other pieces.
-            elif color == 'B':
-                score = AI.KING_VALUE
-        except TypeError:
-            print('Error: Tried to evaluate the score of a piece off the edge of the board.')
-            score = 0
+        if color == 'r':
+            score = AI.PIECE_VALUE + AI.SCORE_ARRAY_1[pos[0]][pos[1]]       # TODO: Halves score for pieces that can be taken in the next turn. Needs balancing.
+        elif color == 'b':
+            score = AI.PIECE_VALUE + AI.SCORE_ARRAY_2[pos[0]][pos[1]]
+        elif color == 'R':
+            score = AI.KING_VALUE                                           # Board position doesn't matter as much for kings -- their job is to jump other pieces.
+        elif color == 'B':
+            score = AI.KING_VALUE
+
+        if Piece.Jumpable(piece, BOARD):
+            score = score / 2
 
         return score
 
@@ -48,7 +49,7 @@ class AI:
 
         total = 0
         for piece in piece_list:
-            total += AI.ValuatePiece(piece.color, piece.pos)
+            total += AI.ValuatePiece(piece)
         return total
 
     def MoveScoring(moving_piece, move, current_piece_list, board):
@@ -94,7 +95,9 @@ AI Steps:
     1a) if none, get all possible moves
 2) Get score for each team, based on current board state
 3) Try each move (by making local copy of board inside a function?) and get score difference (AI newtotal - player newtotal) if made.
-    This could be challenging, as it needs to be done without altering the board, ideally.
+    This could be challenging, as it needs to be done without altering the board, ideally. C
+    Current implementation simply does and undoes each move -- not idealself.
+    should also check if a piece can be jumped, and subtract some points for remaining in/moving to a spot where it can be jumped.
 4) store 4 best moves somewhere (best move == highest score difference after making the move)
 5) choose a move (semi-random: probability based on how good the move is)
 6) do the move

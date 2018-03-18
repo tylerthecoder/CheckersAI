@@ -1,12 +1,32 @@
 class Piece:
-    pieces = {('r','R') : [],                                                   # it may be helpful to store pieces in a dictionary (e.g. {('r','R') : [pieces], ('b','B') : [pieces]} ), as this would allow direct access using OtherColor().
-              ('b','B') : []}                                                   # These dictionaries may also be able to have keys of just one character.
+    pieces = {('r', 'R') : [],
+              ('b', 'B') : []}
 
     # Moves
-    NK_MOVES_R = ((-1, 1), (-1, -1))                                            # Moves for non-king red pieces
-    NK_MOVES_B = ((1, 1), (1, -1))                                              # Moves for non-king black pieces
-    K_MOVES = ((-1, 1), (-1, -1), (1, 1), (1, -1))                              # Moves for all kinged pieces
-    
+    MOVE_LIST = {'r' : ((-1, 1), (-1, -1)),
+                 'b' : ((1, 1), (1, -1)),
+                 'R' : ((-1, 1), (-1, -1), (1, 1), (1, -1)),
+                 'B' : ((-1, 1), (-1, -1), (1, 1), (1, -1))}
+
+
+    PIECE_VALUE = 16                                                            # TODO: Subject to change -- needs balancing
+    KING_VALUE = 90
+
+    # Score array for red pieces
+    SCORE_ARRAY_1 = [['X','X','X','X','X','X','X','X','X','X'],
+                     ['X', 66, 67, 68, 69, 69, 68, 67, 66,'X'],                 # TODO: This array is very much subject to change -- needs balancing.
+                     ['X', 52, 53, 54, 55, 55, 54, 53, 52,'X'],
+                     ['X', 40, 41, 42, 43, 43, 42, 41, 40,'X'],
+                     ['X', 30, 31, 32, 33, 33, 32, 31, 30,'X'],
+                     ['X', 22, 23, 24, 25, 25, 24, 23, 22,'X'],
+                     ['X', 16, 17, 18, 19, 19, 18, 17, 16,'X'],
+                     ['X', 12, 13, 14, 15, 15, 14, 13, 12,'X'],
+                     ['X', 10, 11, 12, 13, 13, 12, 11, 10,'X'],
+                     ['X','X','X','X','X','X','X','X','X','X']]
+
+    # Score array for black pieces
+    SCORE_ARRAY_2 = list(reversed(SCORE_ARRAY_1))                               # score_array_1 upside down
+
 
     def __init__(self, color, pos):
         self.color = color
@@ -14,11 +34,11 @@ class Piece:
         self.jumped = False
 
         if self.color == 'r':                                                   #A Normal Red Piece
-            self.moves = Piece.NK_MOVES_R
+            self.moves = Piece.MOVE_LIST[self.color]
             Piece.pieces[('r','R')].append(self)
 
         elif self.color == 'b':                                                 #A Normal Black Piece
-            self.moves = Piece.NK_MOVES_B
+            self.moves = Piece.MOVE_LIST[self.color]
             Piece.pieces[('b','B')].append(self)
 
         else: print("Not a valid color for a piece.")
@@ -35,7 +55,7 @@ class Piece:
         """This Function returns a tuple containing the opposite colors of the piece passed as an argument."""
 
         if self.color in ('r', 'R'):
-            return ('b','B')
+            return ('b', 'B')
         elif self.color in ('b','B'):
             return ('r','R')
 
@@ -43,7 +63,7 @@ class Piece:
         """This Function recieves a piece on the board as an argument, and checks for possible jumps."""
 
         valid_jumps = []
-        for move in self.moves:                                                # TODO: does not check if next square is open for the piece to move to after jumping.
+        for move in self.moves:
             jumped_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
             new_pos = (self.pos[0] + 2 * move[0], self.pos[1] + 2 * move[1])
 
@@ -113,7 +133,7 @@ class Piece:
         """
 
         valid_moves = []
-        for move in self.moves:                                                #TODO: Create function for this part? Will be repeated many times.
+        for move in self.moves:                                                 # TODO: Create function for this part? Will be repeated many times.
             new_pos = (self.pos[0] + move[0], self.pos[1] + move[1])
             if board[new_pos[0]][new_pos[1]] == 'N':
                 valid_moves.append(move)
@@ -159,12 +179,24 @@ class Piece:
 
         return board
 
+    def Jumpable(self, board):                                                  # TODO: Modify to check if a king can jump the piece.
+        """This function tests to see if a given piece can be jumped by another piece.
+
+        While technically a part of the AI, this function is placed here because it requires easy access to variables in Piece."""
+
+        for move in Piece.MOVE_LIST['R']:                                       # Just checking all diagonals, could use either king color.
+            diagonal_piece = board[self.pos[0] - move[0]][self.pos[1] - move[1]]
+            if diagonal_piece in Piece.pieces[Piece.OtherColor(self)]:
+                if move in Piece.MOVE_LIST[diagonal_piece.color]:
+                    return True
+
+        return False
 
     def King(self):
         """This function changes a normal piece into a kinged piece, updating its color label and moves."""
 
         self.color = self.color.upper()
-        self.moves = Piece.K_MOVES
+        self.moves = Piece.MOVE_LIST[self.color]
         return self
 
     def CreateKings(board):
@@ -186,6 +218,74 @@ class Piece:
                 Piece.King(p)
 
         return board
+
+# FROM AI, KEEP HERE, OR MOVE? =================================================
+
+    def ValuatePiece(self, board):
+        """This function sets the score for a single piece.
+
+        It is passed the piece to check, and returns its point-value, as determined by the score array for its color."""
+        pos = self.pos
+        color = self.color
+
+        if color == 'r':
+            score = Piece.PIECE_VALUE + Piece.SCORE_ARRAY_1[pos[0]][pos[1]]
+        elif color == 'b':
+            score = Piece.PIECE_VALUE + Piece.SCORE_ARRAY_2[pos[0]][pos[1]]
+        elif color == 'R':
+            score = Piece.KING_VALUE                                            # Board position doesn't matter as much for kings -- their job is to jump other pieces.
+        elif color == 'B':
+            score = Piece.KING_VALUE
+
+        if Piece.Jumpable(self, board):                                         # TODO: Currently, this reduces the value of any piece that can be jumped.
+            score = score // 2                                                  #       This is fine when one side is evaluating its own pieces, but it also reduces the value of jumping the other team's pieces.
+
+        return score
+
+    def GetTeamScore(piece_list):
+        """This function calls the ValuatePiece function on each of a team's pieces, and returns the sum of all scores."""
+
+        total = 0
+        for piece in piece_list:
+            total += Piece.ValuatePiece(piece)
+        return total
+
+    def MoveScoring(self, move, current_piece_list, board):
+        """This function calculates how much a team's score will change if it makes a given move.
+
+        It returns a tuple containing (piece_moved, move_made, score_change)."""
+
+        current_team_init_score = Piece.GetTeamScore(current_piece_list)
+
+        board_after_move = Piece.DoMove(self, move, board)
+
+        current_team_final_score = Piece.GetTeamScore(current_piece_list)
+
+        score_dif = current_team_final_score - current_team_init_score
+
+        Piece.UndoMove(self, move, board)
+
+        return (self, move, score_dif)
+
+    def JumpScoring(self, jump, current_piece_list, other_piece_list, board):
+        """This function calculates the total relative change in scores between both teams if a given jump is made.
+
+        Score differential is calculated as (jumping_team_score_change) - (jumped_team_score_change).
+        Returns a tuple containing (self, jump_made, score_change)."""
+
+        current_team_init_score = Piece.GetTeamScore(current_piece_list)
+        other_team_init_score = Piece.GetTeamScore(other_piece_list)
+
+        board_after_move = Piece.DoJump(self, jump, board) # Similar to above, this changes the actual board. Not ideal.
+
+        current_team_final_score = Piece.GetTeamScore(current_piece_list)
+        other_team_final_score = Piece.GetTeamScore(other_piece_list)
+
+        score_dif = (current_team_final_score - current_team_init_score) - (other_team_final_score - other_team_init_score)
+
+        Piece.UndoJump(self, jump, board)
+
+        return (self, jump, score_dif)
 
     def Done(max_moves = 50):
         """
