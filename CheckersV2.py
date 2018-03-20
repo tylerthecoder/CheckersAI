@@ -4,7 +4,7 @@
 import pygame
 import random
 from BoardFunctions import CreateBoard
-from Piece import Piece
+from Piece import *
 
 
 #Colors
@@ -22,22 +22,24 @@ done = Piece.Done()
 
 #DEBUG ============================
 BOARD = CreateBoard()
-moves = Piece.GetAllMoves(Piece.pieces[('r','R')], BOARD)
-# for move in moves:
-    # print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
-
-print(Piece.ValuatePiece(moves[0][0], BOARD))
-Piece.DoMove(moves[0][0], moves[0][1], BOARD)
-
-moves = Piece.GetAllMoves(Piece.pieces[('r','R')], BOARD)
-
-# for move in moves:
-#     print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
-print(Piece.ValuatePiece(moves[0][0], BOARD))
-Piece.DoMove(moves[0][0], moves[0][1], BOARD)
-
-print(Piece.Jumpable(moves[0][0], BOARD))
-print(Piece.ValuatePiece(moves[0][0], BOARD))
+moves = Piece.ScoreAllMoves('r', BOARD)
+print(Piece.ChooseMoveOrJump(moves))
+# moves = Piece.GetAllMoves(Piece.pieces[('r','R')], BOARD)
+# # for move in moves:
+#     # print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
+#
+# print(Piece.ValuatePiece(moves[0][0], BOARD))
+# Piece.DoMove(moves[0][0], moves[0][1], BOARD)
+#
+# moves = Piece.GetAllMoves(Piece.pieces[('r','R')], BOARD)
+#
+# # for move in moves:
+# #     print(AI.MoveScoring(move[0], move[1], Piece.pieces[('r','R')], BOARD))
+# print(Piece.ValuatePiece(moves[0][0], BOARD))
+# Piece.DoMove(moves[0][0], moves[0][1], BOARD)
+#
+# print(Piece.Jumpable(moves[0][0], BOARD))
+# print(Piece.ValuatePiece(moves[0][0], BOARD))
 
 # for row in BOARD:
 #     print(row)

@@ -1,3 +1,5 @@
+import random
+
 class Piece:
     pieces = {('r', 'R') : [],
               ('b', 'B') : []}
@@ -27,7 +29,12 @@ class Piece:
     # Score array for black pieces
     SCORE_ARRAY_2 = list(reversed(SCORE_ARRAY_1))                               # score_array_1 upside down
 
+    #Score Weights
+    EASY = (1, 1, 1, 1)                                                         # These weights may be used to further weight the decision-making process to favor better moves over worse ones, if deemed necessary.
+    MEDIUM = (1.5, 1.0, 0.75, 0.5)
+    HARD = (2.5, 1.5, 1.0, 0.5)
 
+                                                    
     def __init__(self, color, pos):
         self.color = color
         self.pos = pos
@@ -51,12 +58,20 @@ class Piece:
                                                                                 # Instead, it is tagged as 'jumped', which will be checked by Done().
         return board
 
-    def OtherColor(self):
+    def SameColor(color):
+        """This function returns a tuple containing the same colors of the piece passed as an argument."""
+
+        if color in ('r', 'R'):
+            return ('r', 'R')
+        elif color in ('b','B'):
+            return ('b','B')
+
+    def OtherColor(color):
         """This Function returns a tuple containing the opposite colors of the piece passed as an argument."""
 
-        if self.color in ('r', 'R'):
+        if color in ('r', 'R'):
             return ('b', 'B')
-        elif self.color in ('b','B'):
+        elif color in ('b','B'):
             return ('r','R')
 
     def IsJump(self, board):
@@ -69,7 +84,7 @@ class Piece:
 
             if board[jumped_pos[0]][jumped_pos[1]] in ('X','N'):
                 continue
-            elif (board[jumped_pos[0]][jumped_pos[1]].color in Piece.OtherColor(self)) and (board[new_pos[0]][new_pos[1]] == 'N'):
+            elif (board[jumped_pos[0]][jumped_pos[1]].color in Piece.OtherColor(self.color)) and (board[new_pos[0]][new_pos[1]] == 'N'):
                 valid_jumps.append(move)
 
 
@@ -186,7 +201,7 @@ class Piece:
 
         for move in Piece.MOVE_LIST['R']:                                       # Just checking all diagonals, could use either king color.
             diagonal_piece = board[self.pos[0] - move[0]][self.pos[1] - move[1]]
-            if diagonal_piece in Piece.pieces[Piece.OtherColor(self)]:
+            if diagonal_piece in Piece.pieces[Piece.OtherColor(self.color)]:
                 if move in Piece.MOVE_LIST[diagonal_piece.color]:
                     return True
 
@@ -219,6 +234,30 @@ class Piece:
 
         return board
 
+    def Done(max_moves = 50):
+        """
+        This Function checks the number of remaining pieces for each team.
+
+        It also checks the number of moves made total by both players.
+        If either player runs out of pieces, or more than 50 moves are made, the game ends.
+        """
+        move_count = 0
+        done = False
+
+        while not done:
+            move_count += 1
+            if all(Piece.pieces[('r','R')].jumped):
+                done = True
+                print('Black Team Wins!')
+            elif all(Piece.pieces[('b','B')].jumped):
+                done = True
+                print('Red Team Wins!')
+            elif move_count >= max_moves:
+                done = True
+                print('Too many moves! The game is a draw!')
+
+            yield done
+
 # FROM AI, KEEP HERE, OR MOVE? =================================================
 
     def ValuatePiece(self, board):
@@ -250,63 +289,91 @@ class Piece:
             total += Piece.ValuatePiece(piece)
         return total
 
-    def MoveScoring(self, move, current_piece_list, board):
+    def MoveScoring(self, move, board):
         """This function calculates how much a team's score will change if it makes a given move.
 
         It returns a tuple containing (piece_moved, move_made, score_change)."""
 
-        current_team_init_score = Piece.GetTeamScore(current_piece_list)
+        init_score = Piece.ValuatePiece(self, board)
 
         board_after_move = Piece.DoMove(self, move, board)
 
-        current_team_final_score = Piece.GetTeamScore(current_piece_list)
+        final_score = Piece.ValuatePiece(self, board)
 
-        score_dif = current_team_final_score - current_team_init_score
+        score_dif = final_score - init_score
 
         Piece.UndoMove(self, move, board)
 
         return (self, move, score_dif)
 
-    def JumpScoring(self, jump, current_piece_list, other_piece_list, board):
+    def ScoreAllMoves(color, board):
+        """This function calculates a score for all possible moves, and returns a list of the 4 best."""
+
+        move_scores = []
+        move_list = Piece.GetAllMoves(Piece.pieces[Piece.SameColor(color)], board)
+
+        for move in move_list:
+            move_scores.append(Piece.MoveScoring(move[0], move[1], board))
+
+        move_scores = sorted(move_scores, key=lambda x: x[2], reverse=True)[:4]
+
+        return move_scores
+
+    def JumpScoring(self, jump, other_piece_list, board):
         """This function calculates the total relative change in scores between both teams if a given jump is made.
 
         Score differential is calculated as (jumping_team_score_change) - (jumped_team_score_change).
         Returns a tuple containing (self, jump_made, score_change)."""
 
-        current_team_init_score = Piece.GetTeamScore(current_piece_list)
+        piece_init_score = Piece.ValuatePiece(self, board)
         other_team_init_score = Piece.GetTeamScore(other_piece_list)
 
         board_after_move = Piece.DoJump(self, jump, board) # Similar to above, this changes the actual board. Not ideal.
 
-        current_team_final_score = Piece.GetTeamScore(current_piece_list)
+        piece_final_score = Piece.ValuatePiece(self, board)
         other_team_final_score = Piece.GetTeamScore(other_piece_list)
 
-        score_dif = (current_team_final_score - current_team_init_score) - (other_team_final_score - other_team_init_score)
+        score_dif = (piece_final_score - piece_init_score) - (other_team_final_score - other_team_init_score)
 
         Piece.UndoJump(self, jump, board)
 
         return (self, jump, score_dif)
 
-    def Done(max_moves = 50):
-        """
-        This Function checks the number of remaining pieces for each team.
+    def ScoreAllJumps(color, board):
+        """This function calculates a score for all possible jumps, and returns a list of the 4 best."""
 
-        It also checks the number of moves made total by both players.
-        If either player runs out of pieces, or more than 50 moves are made, the game ends.
-        """
-        move_count = 0
-        done = False
+        jump_scores = []
+        jump_list = GetAllJumps(Piece.pieces[Piece.SameColor(color)], board)
+        other_piece_list = Piece.pieces[Piece.OtherColor(color)]
 
-        while not done:
-            move_count += 1
-            if all(Piece.pieces[('r','R')].jumped):
-                done = True
-                print('Black Team Wins!')
-            elif all(Piece.pieces[('b','B')].jumped):
-                done = True
-                print('Red Team Wins!')
-            elif move_count >= max_moves:
-                done = True
-                print('Too many moves! The game is a draw!')
+        for jump in jump_list:
+            jump_scores.append(Piece.JumpScoring(jump[0], jump[1], other_piece_list, board))
 
-            yield done
+        jump_scores = sorted(jump_scores, key=lambda x: x[2], reverse=True)[:4]
+
+        return jump_scores
+
+    def ChooseMoveOrJump(options, difficulty=EASY):
+        weighted_scores = [m[2]*w for m, w in zip(options, difficulty)]              # m[2] is the score of the move in options.
+
+        s = sum(weighted_scores)
+
+        norms = list(map(lambda x: x/s, weighted_scores))
+
+        choice = random.random()
+
+        if choice <= norms[0]:
+            move = options[0]
+
+        elif choice <= sum(norms[:2]):
+            move = options[1]
+
+        elif choice <= sum(norms[:3]):
+            move = options[2]
+
+        elif choice <= sum(norms[:4]):
+            move = options[3]
+
+        else: move = options[0]                                                 # Just in case, default to best move.
+
+        return move
