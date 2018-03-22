@@ -8,7 +8,7 @@ import pygame
 import math
 import random
 
-import grid as gr
+from board import *
 
 #Define some colors
 black = (0, 0, 0)
@@ -18,66 +18,34 @@ red = (255, 0, 0)
 white = (255,255,255)
 
 pygame.init()
-    
-# Set the width and height of the screen [width, height]
-size = (700, 700)
+
+size = (700, 700) #width and height of the screen
 squareLength = math.floor(size[0]/8)
 screen = pygame.display.set_mode(size)
-pygame.display.set_caption("Checkers")    
-
-#creating the grid array
-
-grid = {}
-for col in range(8):
-    for row in range(8):
-        if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
-            char = "r" #set the square to be red
-        elif col > 4 and (row+col)%2 == 0:
-            char = "b" #set the square to be black
-        else:
-            char = "N" #set the square to be empty
-        
-        grid[(row,col)] = char
-
+pygame.display.set_caption("Checkers")
 
 clock = pygame.time.Clock() # Used to manage how fast the screen updates
 mousePressed = True #variable to make the mouse click only happen when mouse is clicked up and then down
-turn = "r"
 done = False
-djSpot = (-1,-1) #used to store if there was a dj last turn
+
+grid = Board("Standard")
 
 #==============================================
 #            Player Function
 #==============================================
 
-#Other functions to help
-
-#gr.makeTurn
-#This functions makes sure the move you have follows all the rules (execpt dj, still working on that)
-#It will return a dict and dict["valid"] will be false if it didn't work
-#Params (Starting Spot, Ending Spot, The Turn, The Grid)
-
-#gr.allPosibleMoves
-#This function will return all the moves on the board that are valid
-#Params (Which color you want to check for, The Grid)
-
-#gr.checkMove
-#This function will tell you if a starting and ending spot will result in a valid move
-#Params (Start Spot, End Spot, Grid)
-
-
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
 def RedPlayer(click):
     global selected
     if selected == (-1,-1):
-        if grid[click].lower() == turn:
+        if grid.board[click].color == grid.turn:
             selected = click
         else:
             print("Wrong Turn")
     elif selected == click:
         selected = (-1,-1)
     else:
-        res = gr.makeTurn(selected,clickedSquare,turn,grid)
+        res = grid.checkMove(selected,clickedSquare,grid.turn)
         if res["valid"]: #if the move was sucsessful
             return res
         else:
@@ -86,20 +54,18 @@ def RedPlayer(click):
     
 
 def BlackPlayer():
-    allMoves = gr.allPosibleMoves("b",grid)
+    allMoves = grid.getAllMoves("b")
     move = random.choice(allMoves)
-    res = gr.makeTurn(move["start"],move["end"],"b",grid)
+    res = grid.checkMove(move["start"],move["end"],"b")
     count = 0 #in case we get an infinite loop somehow
     while not res["valid"]: #keep trying until we get a valid move
         count = count + 1
         move = random.choice(allMoves)
-        res = gr.makeTurn(move["start"],move["end"],"b",grid)
+        res = grid.checkMove(move["start"],move["end"],"b")
         if count > 100:
             print("something went wrong")
             break
     return res
-
-
 
 #=============================================
 #           Main Program Loop
@@ -117,55 +83,18 @@ while not done:
         clickedSquare = (math.floor(pos[0]/(size[0]/8)),math.floor(pos[1]/(size[1]/8)))
         
         #call player functions
-        if turn == "r":
+        if grid.turn == "r":
             res = RedPlayer(clickedSquare)
-            #res = BlackPlayer()
-        elif turn == "b":
+        elif grid.turn == "b":
             res = BlackPlayer()
         
-        #res will return False if something bad happened or a dict if everything worked
-        #Dictionary Keys
-        #start: The spot the piece started at
-        #end: The spot the user selected, not necessarily the spot the piece ended on
-        #drop: This is the spot the piece ended on
-        #spotsToRemove: a list of spots that were jumped or need to be taken off the board
-        #jump: If the move was a jump
-        #valid: If the move worked, should always be true
-
-
         #            Make Move
         #==================================
         if res:
-            #check if there was a dj that needed to happen
-            if djSpot != (-1,-1):
-                if djSpot != res["start"]:
-                    print("You have to continue the jump")
-                    continue
-                djSpot = (-1,-1)
-            
-            #set the new spot equal to the correct color
-            grid[res["drop"]] = grid[res["start"]]
-            
-            #loop through the spots that need deleted
-            for spot in res["spotsToRemove"]: 
-                grid[spot] = "N"
-            
-            #unselect square
-            selected = (-1,-1)
-            
-            #is there a dj on the board?
-            dj = False
-            moves = gr.allPosibleMoves(turn,grid)
-            if res["jump"]:
-                for move in moves:
-                    if move["jump"] and move["start"] == res["drop"]: #there is a dj
-                        dj = True
-                        djSpot = res["drop"]
-            
-            #if no dj, then change the turn
-            if not dj:
-                turn = gr.otherColor(turn)
-                
+            result = grid.applyMove(res["start"],res["end"],grid.turn)
+            if result:
+                selected = (-1,-1)
+
     elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
         mousePressed = False
     
@@ -184,12 +113,6 @@ while not done:
     for i in range(0,8):
         for j in range(0,8):
             spot = (i,j)
-            #check for kinging
-            if grid[spot] == "r" and spot[1] == 7: #if it is red and on the bottom row
-                grid[spot] = "R" #King Them
-            elif grid[spot] == "b" and spot[1] == 0: #if it is black and on the top row
-                grid[spot] = "B" #King Them
-
 
             squareX = i*squareLength
             squareY = j*squareLength
@@ -200,13 +123,13 @@ while not done:
             circleY = math.floor(j*squareLength+squareLength/2)
             radius = math.floor(size[0]/32)
             
-            if grid[(i,j)].lower() == "r":
+            if grid.board[(i,j)].color == "r":
                 pygame.draw.circle(screen, red, [circleX, circleY], radius)
-            elif grid[(i,j)].lower() == "b":
+            elif grid.board[(i,j)].color == "b":
                 pygame.draw.circle(screen, black, [circleX, circleY], radius)
             
             #draw if it is a king
-            if grid[(i,j)] == grid[(i,j)].upper() and grid[(i,j)] != "N":
+            if grid.board[spot].king:
                 pygame.draw.circle(screen,yellow,[circleX,circleY],math.floor(radius/4))
                 
     #Go ahead and update the screen with what we've drawn.
