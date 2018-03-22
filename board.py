@@ -27,7 +27,7 @@ class Board():
             elif boardType == "Empty":
                 self.board[spot] = Spot("N")
             elif boardType == "Copy":
-                self.board[spot] = Spot(copy[spot].color)
+                self.board[spot] = Spot(copy.board[spot].color)
             else:
                 self.board[spot] = Spot("N")
         if boardType == "dbj":
@@ -46,6 +46,16 @@ class Board():
     def movePiece(self,fromPos,toPos):
         self.board[toPos].setMe(self.board[fromPos])
         self.board[fromPos] = Spot("N")
+
+    def countPieces(self):
+        count = {"red":0,"black":0}
+        for spot in self.indices:
+            if self.board[spot].isPlayer:
+                if self.board[spot].color == "r":
+                    count["red"] += 1
+                else:
+                    count["black"] += 1
+        return count
 
     def kingPieces (self):
         for spot in self.indices:
@@ -84,7 +94,6 @@ class Board():
                     if jump["start"] == moveData["drop"]:
                         #There is a dbj
                         self.dbjIndices = moveData["drop"]
-                        print("There is a dbj")
                         dbj = True
         if not dbj:
             if self.turn == "r":

@@ -9,6 +9,7 @@ import math
 import random
 
 from board import *
+from AI import *
 
 #Define some colors
 black = (0, 0, 0)
@@ -53,20 +54,6 @@ def RedPlayer(click):
             return False
     
 
-def BlackPlayer():
-    allMoves = grid.getAllMoves("b")
-    move = random.choice(allMoves)
-    res = grid.checkMove(move["start"],move["end"],"b")
-    count = 0 #in case we get an infinite loop somehow
-    while not res["valid"]: #keep trying until we get a valid move
-        count = count + 1
-        move = random.choice(allMoves)
-        res = grid.checkMove(move["start"],move["end"],"b")
-        if count > 100:
-            print("something went wrong")
-            break
-    return res
-
 #=============================================
 #           Main Program Loop
 #=============================================
@@ -86,7 +73,7 @@ while not done:
         if grid.turn == "r":
             res = RedPlayer(clickedSquare)
         elif grid.turn == "b":
-            res = BlackPlayer()
+            res = AIPlayer(grid)
         
         #            Make Move
         #==================================
