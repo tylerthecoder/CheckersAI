@@ -47,6 +47,13 @@ class Board():
         self.board[toPos].setMe(self.board[fromPos])
         self.board[fromPos] = Spot("N")
 
+    def kingPieces (self):
+        for spot in self.indices:
+            if self.board[spot].color == "r" and spot[1] == 7: #if it is red and on the bottom row
+                self.board[spot].kingMe()
+            elif self.board[spot].color == "b" and spot[1] == 0: #if it is black and on the top row
+                self.board[spot].kingMe()
+
     def applyMove(self,start,end,turn):
         moveData = self.checkMove(start,end,turn)
         if not moveData["valid"]:
@@ -59,6 +66,9 @@ class Board():
         for spot in moveData["spotsToRemove"]: 
             self.board[spot].isPlayer = False
             self.board[spot].color = "N"
+
+        #king everyone
+        self.kingPieces()
 
         #is there a dbj on the board?
 
@@ -85,9 +95,7 @@ class Board():
         return True
 
     def checkMove(self,start,end,turn):
-        result = {
-            "error":""
-        }
+        result = {"error":""}
 
         moveData = self.getMoveData(start,end)
 

@@ -7,7 +7,7 @@ class Spot:
         self.color = color
         self.king = False
     
-    def kingMe():
+    def kingMe(self):
         self.king = True
 
     def setMe (self,spot):

@@ -8,7 +8,6 @@ import pygame
 import math
 import random
 
-import grid as gr
 from board import *
 
 #Define some colors
@@ -47,7 +46,6 @@ def RedPlayer(click):
         selected = (-1,-1)
     else:
         res = grid.checkMove(selected,clickedSquare,grid.turn)
-        print(res)
         if res["valid"]: #if the move was sucsessful
             return res
         else:
@@ -87,18 +85,16 @@ while not done:
         #call player functions
         if grid.turn == "r":
             res = RedPlayer(clickedSquare)
-            #res = BlackPlayer()
         elif grid.turn == "b":
             res = BlackPlayer()
         
         #            Make Move
         #==================================
-        print(res)
         if res:
             result = grid.applyMove(res["start"],res["end"],grid.turn)
             if result:
                 selected = (-1,-1)
-                        
+
     elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
         mousePressed = False
     
@@ -117,12 +113,6 @@ while not done:
     for i in range(0,8):
         for j in range(0,8):
             spot = (i,j)
-            #check for kinging
-            if grid.board[spot] == "r" and spot[1] == 7: #if it is red and on the bottom row
-                grid.board[spot].kingMe()
-            elif grid.board[spot] == "b" and spot[1] == 0: #if it is black and on the top row
-                grid.board[spot].kingMe()
-
 
             squareX = i*squareLength
             squareY = j*squareLength
@@ -139,7 +129,7 @@ while not done:
                 pygame.draw.circle(screen, black, [circleX, circleY], radius)
             
             #draw if it is a king
-            if grid.board[(i,j)].king:
+            if grid.board[spot].king:
                 pygame.draw.circle(screen,yellow,[circleX,circleY],math.floor(radius/4))
                 
     #Go ahead and update the screen with what we've drawn.
