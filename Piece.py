@@ -4,6 +4,9 @@ class Piece:
     pieces = {('r', 'R') : [],
               ('b', 'B') : []}
 
+    jumped_pieces = {('r','R') : [],
+                     ('b','B') : []}
+
     # Moves
     MOVE_LIST = {'r' : ((-1, 1), (-1, -1)),
                  'b' : ((1, 1), (1, -1)),
@@ -13,6 +16,7 @@ class Piece:
 
     PIECE_VALUE = 16                                                            # TODO: Subject to change -- needs balancing
     KING_VALUE = 90
+    DOUBLE_JUMP_BONUS = 30
 
     # Score array for red pieces
     SCORE_ARRAY_1 = [['X','X','X','X','X','X','X','X','X','X'],
@@ -34,11 +38,10 @@ class Piece:
     MEDIUM = (1.5, 1.0, 0.75, 0.5)
     HARD = (2.5, 1.5, 1.0, 0.5)
 
-                                                    
+
     def __init__(self, color, pos):
         self.color = color
         self.pos = pos
-        self.jumped = False
 
         if self.color == 'r':                                                   #A Normal Red Piece
             self.moves = Piece.MOVE_LIST[self.color]
@@ -54,8 +57,9 @@ class Piece:
         """Deletes a piece from the board and list of pieces."""
 
         board[self.pos[0]][self.pos[1]] = 'N'
-        self.jumped = True                                                      # Don't actually delete the object, because it may be needed in the UndoJump() function.
-                                                                                # Instead, it is tagged as 'jumped', which will be checked by Done().
+        Piece.pieces[Piece.SameColor(self.color)].remove(self)                  # Moves the piece to a new list of jumped pieces.
+        Piece.jumped_pieces[Piece.SameColor(self.color)].append(self)
+
         return board
 
     def SameColor(color):
@@ -128,15 +132,25 @@ class Piece:
         It returns the board to its original state, before the given jump was performed."""
 
         board[self.pos[0]][self.pos[1]] = 'N'
-        self.pos[0] += 2 * jump[0]                                              # Set new position for jumping piece.
-        self.pos[1] += 2 * jump[1]
+        self.pos[0] -= 2 * jump[0]                                              # Set new position for jumping piece.
+        self.pos[1] -= 2 * jump[1]
         board[self.pos[0]][self.pos[1]] = self
 
         jumped_pos = [self.pos[0] + jump[0], self.pos[1] + jump[1]]
-        for piece in pieces[OtherColor(self.color)]:
-            if piece.pos == jumped_pos:
-                board[jumped_pos[0]][jumped_pos[1]] = piece
-                piece.jumped = False
+        piece = Piece.jumped_pieces[Piece.OtherColor(self.color)][-1]           # The piece to be undone should always be the most recent one added to the jumped pieces. Hoepfully...
+
+        assert piece.pos == jumped_pos                                           # Make sure we're putting the piece back in the right spot.
+
+        board[jumped_pos[0]][jumped_pos[1]] = piece
+        Piece.jumped_pieces[Piece.SameColor(piece.color)].remove(piece)
+        Piece.pieces[Piece.SameColor(piece.color)].append(piece)
+
+        # for piece in Piece.jumped_pieces[Piece.OtherColor(self.color)]:
+        #     if piece.pos == jumped_pos:
+        #         board[jumped_pos[0]][jumped_pos[1]] = piece
+        #         Piece.jumped_pieces[Piece.SameColor(piece.color)].remove(piece)
+        #         Piece.pieces[Piece.SameColor(piece.color)].append(piece)
+        #         break
 
         return board
 
@@ -234,7 +248,7 @@ class Piece:
 
         return board
 
-    def Done(max_moves = 50):
+    def Done(max_moves=75):
         """
         This Function checks the number of remaining pieces for each team.
 
@@ -246,10 +260,10 @@ class Piece:
 
         while not done:
             move_count += 1
-            if all(Piece.pieces[('r','R')].jumped):
+            if Piece.pieces[('r','R')] == []:
                 done = True
                 print('Black Team Wins!')
-            elif all(Piece.pieces[('b','B')].jumped):
+            elif Piece.pieces[('b','B')] == []:
                 done = True
                 print('Red Team Wins!')
             elif move_count >= max_moves:
@@ -281,12 +295,12 @@ class Piece:
 
         return score
 
-    def GetTeamScore(piece_list):
+    def GetTeamScore(piece_list, board):
         """This function calls the ValuatePiece function on each of a team's pieces, and returns the sum of all scores."""
 
         total = 0
         for piece in piece_list:
-            total += Piece.ValuatePiece(piece)
+            total += Piece.ValuatePiece(piece, board)
         return total
 
     def MoveScoring(self, move, board):
@@ -326,12 +340,15 @@ class Piece:
         Returns a tuple containing (self, jump_made, score_change)."""
 
         piece_init_score = Piece.ValuatePiece(self, board)
-        other_team_init_score = Piece.GetTeamScore(other_piece_list)
+        other_team_init_score = Piece.GetTeamScore(other_piece_list, board)
 
-        board_after_move = Piece.DoJump(self, jump, board) # Similar to above, this changes the actual board. Not ideal.
+        board_after_move = Piece.DoJump(self, jump, board)                      # Similar to above, this changes the actual board. Not ideal.
 
         piece_final_score = Piece.ValuatePiece(self, board)
-        other_team_final_score = Piece.GetTeamScore(other_piece_list)
+        if Piece.IsJump(self, board)[1] != []:                                  # Score bonus for pieces that can double jump. Triple jump not checked.
+            piece_final_score += Piece.DOUBLE_JUMP_BONUS
+
+        other_team_final_score = Piece.GetTeamScore(other_piece_list, board)
 
         score_dif = (piece_final_score - piece_init_score) - (other_team_final_score - other_team_init_score)
 
@@ -343,7 +360,7 @@ class Piece:
         """This function calculates a score for all possible jumps, and returns a list of the 4 best."""
 
         jump_scores = []
-        jump_list = GetAllJumps(Piece.pieces[Piece.SameColor(color)], board)
+        jump_list = Piece.GetAllJumps(Piece.pieces[Piece.SameColor(color)], board)
         other_piece_list = Piece.pieces[Piece.OtherColor(color)]
 
         for jump in jump_list:
@@ -354,13 +371,20 @@ class Piece:
         return jump_scores
 
     def ChooseMoveOrJump(options, difficulty=EASY):
-        weighted_scores = [m[2]*w for m, w in zip(options, difficulty)]              # m[2] is the score of the move in options.
+        """This function takes the provided list of possible moves/jumps, and their scores and returns a choice of which move to makeself.
+
+        This function weights each score according to the difficulty (with higher difficulties giving larger weights to better moves),
+        then normalizes the scores, so that they sum to 1 (with better moves comprising a larger portion of that range),
+        then selects a random number [0-1] and selects the move that falls within that range."""
+        weighted_scores = [m[2]*w for m, w in zip(options, difficulty)]         # m[2] is the score of the move in options.
 
         s = sum(weighted_scores)
+        if s == 0:
+            s += 1
 
-        norms = list(map(lambda x: x/s, weighted_scores))
+        norms = list(map(lambda x: x/s, weighted_scores))                       # Normalize all scores, so they sum to 1.
 
-        choice = random.random()
+        choice = random.random()                                                # Random number [0-1]
 
         if choice <= norms[0]:
             move = options[0]
@@ -374,6 +398,6 @@ class Piece:
         elif choice <= sum(norms[:4]):
             move = options[3]
 
-        else: move = options[0]                                                 # Just in case, default to best move.
+        else: move = options[0]                                                 # Just in case, default to best move. This should never happen. I hope.
 
         return move

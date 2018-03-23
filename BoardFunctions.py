@@ -1,13 +1,26 @@
 from Piece import Piece
+import pygame as pg
 
-def OnBoard(pos, board):                                                        # TODO: Not sure how/if I want to utilize this function. It may create some strange dependencies.
-    """This function returns the value of the provided position on whatever board is passed as an argument.
+#Colors -- Not using all of them currently, TODO: Remove extraneous colors. Probably will move back to main program.
+BLACK = (0, 0, 0)
+DARK_BROWN = (140, 100, 20)
+LIGHT_BROWN = (220, 190, 130)
 
-    The position is passed as a list or tuple.
-    NOTE: This function is currently unused."""
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+YELLOW = (255, 255, 0)
 
-    return board[pos[0]][pos[1]]
 
+clock = pg.time.Clock()
+clock.tick(30)
+
+size = (700,700)
+screen = pg.display.set_mode(size)
+pg.display.set_caption("Checkers")
+pg.init()
+
+tile_width = size[0] / 8
 
 
 def CreateBoard():
@@ -38,3 +51,33 @@ def CreateBoard():
                     else: board[row][col] = 'N'
 
     return board
+
+def DrawBoard(board, screen=screen, tile_width=tile_width, ground_color=DARK_BROWN, tile_color=LIGHT_BROWN, line_color=BLACK, piece1=RED, piece2=BLACK, piece_type=Piece):
+    pg.Surface.lock(screen)
+    screen.fill((ground_color))
+
+    #Create Tiles
+    for i in range(8):
+        for j in range(8):
+            if (i + j) % 2 == 1:
+                pg.draw.rect(screen, tile_color, [j*tile_width, i*tile_width, tile_width, tile_width], 0)
+
+    # Draw Tile Outlines
+    for i in range(8):
+        pg.draw.line(screen, line_color, [i*tile_width, 0], [i*tile_width, size[1]], 4)
+        for j in range(8):
+            pg.draw.line(screen, line_color, [0, j*tile_width], [700, j*tile_width], 4)
+    pg.draw.line(screen, line_color, [size[0] - 3, 0], [size[0] - 3, size[1]], 4)
+    pg.draw.line(screen, line_color, [0, size[1] - 3], [size[0], size[1] - 3], 4)
+
+    #Draw pieces
+    for i in range(8):
+        for j in range(8):
+            if isinstance(board[i+1][j+1], piece_type):
+                if board[i+1][j+1].color in ('r','R'):
+                    pg.draw.circle(screen, piece1, [int(j*tile_width + (tile_width / 2)), int(i*tile_width + (tile_width / 2))], 25)
+                elif board[i+1][j+1].color in ('b','B'):
+                    pg.draw.circle(screen, piece2, [int(j*tile_width + (tile_width / 2)), int(i*tile_width + (tile_width / 2))], 25)
+
+    pg.Surface.unlock(screen)
+    pg.display.flip()
