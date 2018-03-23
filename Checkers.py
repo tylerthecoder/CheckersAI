@@ -46,9 +46,10 @@ def RedPlayer(click):
     elif selected == click:
         selected = (-1,-1)
     else:
-        res = grid.checkMove(selected,clickedSquare,grid.turn)
+        move = Move(selected,clickedSquare,grid)
+        res = grid.checkMove(move)
         if res["valid"]: #if the move was sucsessful
-            return res
+            return move
         else:
             print(res["error"])
             return False
@@ -71,16 +72,17 @@ while not done:
         
         #call player functions
         if grid.turn == "r":
-            res = RedPlayer(clickedSquare)
+            move = RedPlayer(clickedSquare)
         elif grid.turn == "b":
-            res = AIPlayer(grid)
+            move = AIPlayer(grid)
         
         #            Make Move
         #==================================
-        if res:
-            result = grid.applyMove(res["start"],res["end"],grid.turn)
+        if move:
+            result = grid.applyMove(move)
             if result:
                 selected = (-1,-1)
+            
 
     elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
         mousePressed = False
