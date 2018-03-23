@@ -17,6 +17,7 @@ class Piece:
     PIECE_VALUE = 16                                                            # TODO: Subject to change -- needs balancing
     KING_VALUE = 90
     DOUBLE_JUMP_BONUS = 30
+    KING_MOVE_BONUS = 10                                                        # This is necessary to encourage kings to move, even when they can't jump immediately.
 
     # Score array for red pieces
     SCORE_ARRAY_1 = [['X','X','X','X','X','X','X','X','X','X'],
@@ -126,6 +127,19 @@ class Piece:
 
         return board
 
+    def MultipleJumps(self, board):
+        jumps = Piece.IsJump(self, board)
+        if jumps[1] != []:
+            jump_scores = []
+            for jump in jumps[1]:
+                jump_scores.append(Piece.JumpScoring(self, jump, board))
+            jump_choice = Piece.ChooseMoveOrJump(jump_scores)
+            Piece.DoJump(self, jump_choice[1], board)
+            return board
+        else: return False
+
+
+
     def UndoJump(self, jump, board):                                            # Right now, this and the UndoMove function are necessary to test moves. Ideally, we should be able to test moves/jumps without modifying and undoing changes to the board.
         """This function does the opposite of the DoJump function.
 
@@ -144,13 +158,6 @@ class Piece:
         board[jumped_pos[0]][jumped_pos[1]] = piece
         Piece.jumped_pieces[Piece.SameColor(piece.color)].remove(piece)
         Piece.pieces[Piece.SameColor(piece.color)].append(piece)
-
-        # for piece in Piece.jumped_pieces[Piece.OtherColor(self.color)]:
-        #     if piece.pos == jumped_pos:
-        #         board[jumped_pos[0]][jumped_pos[1]] = piece
-        #         Piece.jumped_pieces[Piece.SameColor(piece.color)].remove(piece)
-        #         Piece.pieces[Piece.SameColor(piece.color)].append(piece)
-        #         break
 
         return board
 
@@ -248,7 +255,7 @@ class Piece:
 
         return board
 
-    def Done(max_moves=75):
+    def Done(max_moves=100):
         """
         This Function checks the number of remaining pieces for each team.
 
@@ -271,8 +278,6 @@ class Piece:
                 print('Too many moves! The game is a draw!')
 
             yield done
-
-# FROM AI, KEEP HERE, OR MOVE? =================================================
 
     def ValuatePiece(self, board):
         """This function sets the score for a single piece.
@@ -313,6 +318,8 @@ class Piece:
         board_after_move = Piece.DoMove(self, move, board)
 
         final_score = Piece.ValuatePiece(self, board)
+        if self.color in ('R','B'):                                             # Give kings a bonus to encourage them to move around the board.
+            final_score += Piece.KING_MOVE_BONUS
 
         score_dif = final_score - init_score
 
@@ -333,11 +340,13 @@ class Piece:
 
         return move_scores
 
-    def JumpScoring(self, jump, other_piece_list, board):
+    def JumpScoring(self, jump, board):
         """This function calculates the total relative change in scores between both teams if a given jump is made.
 
         Score differential is calculated as (jumping_team_score_change) - (jumped_team_score_change).
         Returns a tuple containing (self, jump_made, score_change)."""
+
+        other_piece_list = Piece.pieces[Piece.OtherColor(self.color)]
 
         piece_init_score = Piece.ValuatePiece(self, board)
         other_team_init_score = Piece.GetTeamScore(other_piece_list, board)
@@ -361,16 +370,16 @@ class Piece:
 
         jump_scores = []
         jump_list = Piece.GetAllJumps(Piece.pieces[Piece.SameColor(color)], board)
-        other_piece_list = Piece.pieces[Piece.OtherColor(color)]
+
 
         for jump in jump_list:
-            jump_scores.append(Piece.JumpScoring(jump[0], jump[1], other_piece_list, board))
+            jump_scores.append(Piece.JumpScoring(jump[0], jump[1], board))
 
         jump_scores = sorted(jump_scores, key=lambda x: x[2], reverse=True)[:4]
 
         return jump_scores
 
-    def ChooseMoveOrJump(options, difficulty=EASY):
+    def ChooseMoveOrJump(options, difficulty=HARD):
         """This function takes the provided list of possible moves/jumps, and their scores and returns a choice of which move to makeself.
 
         This function weights each score according to the difficulty (with higher difficulties giving larger weights to better moves),

@@ -52,14 +52,14 @@ def CreateBoard():
 
     return board
 
-def DrawBoard(board, screen=screen, tile_width=tile_width, ground_color=DARK_BROWN, tile_color=LIGHT_BROWN, line_color=BLACK, piece1=RED, piece2=BLACK, piece_type=Piece):
+def DrawBoard(board, screen=screen, tile_width=tile_width, ground_color=DARK_BROWN, tile_color=LIGHT_BROWN, line_color=BLACK, piece1=RED, piece2=BLACK, king_color=YELLOW, piece_type=Piece):
     pg.Surface.lock(screen)
     screen.fill((ground_color))
 
     #Create Tiles
     for i in range(8):
         for j in range(8):
-            if (i + j) % 2 == 1:
+            if (i + j) % 2 == 0:
                 pg.draw.rect(screen, tile_color, [j*tile_width, i*tile_width, tile_width, tile_width], 0)
 
     # Draw Tile Outlines
@@ -76,8 +76,11 @@ def DrawBoard(board, screen=screen, tile_width=tile_width, ground_color=DARK_BRO
             if isinstance(board[i+1][j+1], piece_type):
                 if board[i+1][j+1].color in ('r','R'):
                     pg.draw.circle(screen, piece1, [int(j*tile_width + (tile_width / 2)), int(i*tile_width + (tile_width / 2))], 25)
+                    if board[i+1][j+1].color == 'R':
+                        pg.draw.circle(screen, king_color, [int(j*tile_width + (tile_width / 2)), int(i*tile_width + (tile_width / 2))], 10)
                 elif board[i+1][j+1].color in ('b','B'):
                     pg.draw.circle(screen, piece2, [int(j*tile_width + (tile_width / 2)), int(i*tile_width + (tile_width / 2))], 25)
-
+                    if board[i+1][j+1].color == 'B':
+                        pg.draw.circle(screen, king_color, [int(j*tile_width + (tile_width / 2)), int(i*tile_width + (tile_width / 2))], 10)
     pg.Surface.unlock(screen)
     pg.display.flip()
