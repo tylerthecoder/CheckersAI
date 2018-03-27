@@ -93,7 +93,7 @@ class Board():
             self.nextTurn()
             self.dbjIndices = (-1,-1)
 
-        #cal is there is a jump on this board, do now so the computation doesn't have to be done over and over'
+        #cal is there is a jump on this board, do now so the computation doesn't have to be done over and over
         self.isJumpAv = len(self.getAllMoves(self.turn,True)) > 0
 
         return True

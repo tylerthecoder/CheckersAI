@@ -72,10 +72,10 @@ while not done:
         
         #call player functions
         if grid.turn == "r":
-            move = HumanPlayer(clickedSquare)
+            move = AIPlayer(grid,"r")
             #move = AIPlayer(grid,"r")
         elif grid.turn == "b":
-            move = AIPlayer(grid,"b")
+            move = HumanPlayer(clickedSquare)
         
         #            Make Move
         #==================================
