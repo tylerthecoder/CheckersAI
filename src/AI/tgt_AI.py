@@ -1,6 +1,7 @@
-from board import *
 import random
-import pdb
+import sys
+sys.path.append("../")
+from board import *
 
 boardVals = [
     [10,10,10,10,10,10,10,10],

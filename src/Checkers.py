@@ -8,7 +8,7 @@ import drawing
 from board import Board, Move
 
 sys.path.insert(0, '/AI')
-import AI.tgt_AI as tgt_AI
+import AI.tgt_AI, AI.rand_AI
 
 mainWindow = drawing.Window((800,800))
 grid = Board("Standard")
@@ -18,8 +18,14 @@ grid = Board("Standard")
 #==============================================
 
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
-def HumanPlayer(click):
+def HumanPlayer(grid):
     global selected
+
+    if not mainWindow.isClick():
+        #user didn't click anything 
+        return False
+
+    click = mainWindow.getClickedSquare()
 
     #if you click the piece that you already selected, then unselect
     if selected == click:
@@ -31,7 +37,7 @@ def HumanPlayer(click):
     
     #try to play
     else:
-        move = Move(selected,clickedSquare,grid)
+        move = Move(selected,click,grid)
         res = grid.checkMove(move)
         if res["valid"]: #if the move was sucsessful
             return move
@@ -47,17 +53,15 @@ done = False
 while not done:
     done = mainWindow.isQuit() #did they click the exit button?
 
+
     move = False
+
     if grid.turn == "r":
-        #did they click the grid
-        if mainWindow.isClick(): 
-            #check where click happened;
-            clickedSquare = mainWindow.getClickedSquare()
-            
-            move = HumanPlayer(clickedSquare)   
-            
+        # move = AI.rand_AI.AIPlayer(grid,"r")
+        move = HumanPlayer(grid)  
+
     elif grid.turn == "b":
-        move = tgt_AI.AIPlayer(grid,"b")
+        move = AI.tgt_AI.AIPlayer(grid,"b")
     
     #Make the move
     if move:
@@ -66,6 +70,8 @@ while not done:
             #reset the player selection
             selected = (-1,-1)
     
+
+
     mainWindow.draw(grid,selected)
  
     mainWindow.tick() #Go to the next frame
