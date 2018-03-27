@@ -130,6 +130,7 @@ class Piece:
         return board
 
     def MultipleJumps(self, board):
+        """This function is used by the AI to check if a piece can jump a second (or more) time. It checks for and then performs the jump."""
         jumps = Piece.IsJump(self, board)
         if jumps[1] != []:
             jump_scores = []
