@@ -53,7 +53,6 @@ done = False
 while not done:
     done = mainWindow.isQuit() #did they click the exit button?
 
-
     move = False
 
     if grid.turn == "r":
@@ -69,8 +68,6 @@ while not done:
         if result:
             #reset the player selection
             selected = (-1,-1)
-    
-
 
     mainWindow.draw(grid,selected)
  

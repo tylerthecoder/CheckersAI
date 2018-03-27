@@ -3,6 +3,16 @@ import sys
 sys.path.append("../")
 from board import Board,Move
 
+boardVals = [
+    [10,10,10,10,10,10,10,10],
+    [10, 9, 9, 9, 9, 9, 9,10],
+    [ 9, 8, 8, 8, 8, 8, 8, 9],
+    [ 8, 7, 7, 7, 7, 7, 7, 8],
+    [ 7, 6, 6, 6, 6, 6, 6, 7],
+    [ 5, 5, 5, 5, 5, 5, 5, 5],
+    [ 5, 5, 5, 5, 5, 5, 5, 5],
+    [10,10,10,10,10,10,10,10]
+]
 
 def AIPlayer (board,turn):
     allMoves = board.getAllMoves(turn)
@@ -22,7 +32,6 @@ def AIPlayer (board,turn):
             elif avg == best:
                 bestMove.append(move)
         
-    print("============================================current score:", boardValue(board,turn,1))
     return random.choice(bestMove)
 
 
@@ -53,4 +62,3 @@ def boardValue(grid,color,weight):
             else:
                 count -= amount * weight
     return count
-
