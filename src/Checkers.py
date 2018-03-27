@@ -3,9 +3,12 @@
 # Author: Tyler Tracy
 # Purpose: To simulate the game of checkers and to make it easier for an AI to play
 #================================
+import sys
 import drawing
-import tgt_AI
 from board import Board, Move
+
+sys.path.insert(0, '/AI')
+import AI.tgt_AI as tgt_AI
 
 mainWindow = drawing.Window((800,800))
 grid = Board("Standard")
