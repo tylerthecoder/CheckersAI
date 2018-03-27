@@ -6,7 +6,8 @@ class Spot:
             self.isPlayer = False
         self.color = color
         self.king = False
-    
+        self.me = "namer"
+
     def kingMe(self):
         self.king = True
 
@@ -14,5 +15,3 @@ class Spot:
         self.color = spot.color
         self.isPlayer = spot.isPlayer
         self.king = spot.king
-
-    
