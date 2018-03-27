@@ -6,7 +6,7 @@ class Board():
     for col in range(8):
         for row in range(8):
             indices.append((row,col))
-
+    isJumpAv = False
     dbjIndices = (-1,-1)
     turn = "r"
 
@@ -34,6 +34,8 @@ class Board():
             self.board[(2,2)] = Spot("r")
             self.board[(4,4)] = Spot("r")
             self.board[(5,5)] = Spot("b")
+        if boardType == "Copy":
+            self.turn = copy.turn
 
     def isRealSpot(self,spot):
         if spot[0] < 0 or spot[0] > 7:
@@ -41,6 +43,12 @@ class Board():
         elif spot[1] < 0 or spot[1] > 7:
             return False
         return True
+
+    def nextTurn (self):
+        if self.turn == "r":
+            self.turn = "b"
+        elif self.turn == "b":
+            self.turn = "r"
 
     def movePiece(self,fromPos,toPos):
         self.board[toPos].setMe(self.board[fromPos])
@@ -54,7 +62,6 @@ class Board():
                 self.board[spot].kingMe()
 
     def applyMove(self,move):
-
         if not self.checkMove(move)["valid"]:
             return False
         
@@ -83,11 +90,11 @@ class Board():
 
         #change the turn if there isn't a double jump
         if not dbj:
-            if self.turn == "r":
-                self.turn = "b"
-            elif self.turn == "b":
-                self.turn = "r"
+            self.nextTurn()
             self.dbjIndices = (-1,-1)
+
+        #cal is there is a jump on this board, do now so the computation doesn't have to be done over and over'
+        self.isJumpAv = len(self.getAllMoves(self.turn,True)) > 0
 
         return True
 
@@ -103,7 +110,7 @@ class Board():
             result["error"] = "Not your turn"
 
         #if there is a jump and you are not jummping
-        elif len(self.getAllMoves(self.turn,True)) > 0 and not move.jump:
+        elif self.isJumpAv and not move.jump:
             result["error"] = "You must take the jump"
         
         #if there is a double jump and you aren't taking it
@@ -146,6 +153,15 @@ class Board():
                     else:
                         allMoves.append(move)
         return allMoves
+
+    def print (self):
+        for col in range(8):
+            rowStr = ""
+            for row in range(8):
+                p = self.board[(row,col)]
+                rowStr += p.color
+            print(rowStr)
+            
 
 
 

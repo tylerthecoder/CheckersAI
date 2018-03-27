@@ -1,57 +1,67 @@
 from board import *
 import random
+import pdb
 
-def AIPlayer (board):
-    allMoves = board.getAllMoves("b")
+boardVals = [
+    [10,10,10,10,10,10,10,10],
+    [10, 9, 9, 9, 9, 9, 9,10],
+    [ 9, 8, 8, 8, 8, 8, 8, 9],
+    [ 8, 7, 7, 7, 7, 7, 7, 8],
+    [ 7, 6, 6, 6, 6, 6, 6, 7],
+    [ 5, 5, 5, 5, 5, 5, 5, 5],
+    [ 5, 5, 5, 5, 5, 5, 5, 5],
+    [10,10,10,10,10,10,10,10]
+]
+
+
+
+def AIPlayer (board,turn):
+    allMoves = board.getAllMoves(turn)
     best = -10000000
-    bestMove = []
+    bestMove = [allMoves[0]]
     for move in allMoves:
         if board.checkMove(move)["valid"]:
             #calculate the average of all the boardValues two turns in
+            # spdb.set_trace()
             newBoard = Board("Copy",board)
             newBoard.applyMove(move)
-            avg = recursiveMoveFinder(newBoard,2)
-            avg = avg[0]/avg[1]
+            avg = recursiveMoveFinder(newBoard,3,turn)
+            print(move.start,move.end,avg)
             if avg > best:
                 best = avg
                 bestMove = [move]
             elif avg == best:
                 bestMove.append(move)
         
-    print("current score:", boardValue(board,"b"))
+    print("============================================current score:", boardValue(board,turn,1))
     return random.choice(bestMove)
 
 
-def recursiveMoveFinder (board,depth):
-    avg = [0,0]
+def recursiveMoveFinder (board,depth,turn):
+    avg = 0
     allMoves = board.getAllMoves(board.turn)
     for move in allMoves:
-
         if board.checkMove(move)["valid"]:
             newBoard = Board("Copy",board)
             newBoard.applyMove(move)
-            # print(move["start"],move["end"],boardValue(newBoard,"b"))
-            avg[0] += boardValue(newBoard,"b")
-            avg[1] += 1 #increase the count
+            avg += boardValue(newBoard,turn,depth+1)
             if depth > 0:
-                data = recursiveMoveFinder(newBoard,depth-1)
-                avg[0] += data[0]
-                avg[1] += data[1]
-
+                data = recursiveMoveFinder(newBoard,depth-1,turn)
+                avg += data
     return avg
 
 
-def boardValue(grid,color):
+def boardValue(grid,color,weight):
     count = 0
     for spot in grid.indices:
         pie = grid.board[spot]
         amount = 1
         if pie.isPlayer:
             if pie.king:
-                amount = 2
+                amount = 4
             if pie.color == color:
-                count += amount
+                count += amount * weight
             else:
-                count -= amount
+                count -= amount * weight
     return count
 

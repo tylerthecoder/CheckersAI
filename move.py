@@ -55,9 +55,6 @@ class Move():
                 self.valid = True
     
     def print(self):
-        print("Start: ", self.start, "End: ", self.end)
-                
-    
-
+        print("Start: ", self.start, "End: ", self.end, "Valid: ", self.valid)
         
 

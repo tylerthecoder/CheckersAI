@@ -36,7 +36,7 @@ grid = Board("Standard")
 #==============================================
 
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
-def RedPlayer(click):
+def HumanPlayer(click):
     global selected
     if selected == (-1,-1):
         if grid.board[click].color == grid.turn:
@@ -72,9 +72,10 @@ while not done:
         
         #call player functions
         if grid.turn == "r":
-            move = RedPlayer(clickedSquare)
+            move = HumanPlayer(clickedSquare)
+            #move = AIPlayer(grid,"r")
         elif grid.turn == "b":
-            move = AIPlayer(grid)
+            move = AIPlayer(grid,"b")
         
         #            Make Move
         #==================================
