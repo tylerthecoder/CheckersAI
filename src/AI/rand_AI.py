@@ -1,8 +1,0 @@
-import random
-
-def AIPlayer (board,turn):
-    allMoves = board.getAllMoves(board.turn)
-    goodMoves = []
-    for move in allMoves:
-        if board.checkMove(move)["valid"]: goodMoves.append(move)
-    return random.choice(allMoves)
