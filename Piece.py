@@ -17,7 +17,9 @@ class Piece:
     PIECE_VALUE = 16                                                            # TODO: Subject to change -- needs balancing
     KING_VALUE = 90
     DOUBLE_JUMP_BONUS = 30
-    KING_MOVE_BONUS = 10                                                        # This is necessary to encourage kings to move, even when they can't jump immediately.
+    KING_MOVE_BONUS = 8                                                         # This is necessary to encourage kings to move, even when they can't jump immediately.
+    WEIGHT_MULTIPLIER = 0.25
+    MOVE_CHOICES = 6
 
     # Score array for red pieces
     SCORE_ARRAY_1 = [['X','X','X','X','X','X','X','X','X','X'],
@@ -279,6 +281,7 @@ class Piece:
 
             yield done
 
+
     def ValuatePiece(self, board):
         """This function sets the score for a single piece.
 
@@ -328,7 +331,7 @@ class Piece:
         return (self, move, score_dif)
 
     def ScoreAllMoves(color, board):
-        """This function calculates a score for all possible moves, and returns a list of the 4 best."""
+        """This function calculates a score for all possible moves, and returns a sorted list of moves and their scores."""
 
         move_scores = []
         move_list = Piece.GetAllMoves(Piece.pieces[Piece.SameColor(color)], board)
@@ -336,7 +339,7 @@ class Piece:
         for move in move_list:
             move_scores.append(Piece.MoveScoring(move[0], move[1], board))
 
-        move_scores = sorted(move_scores, key=lambda x: x[2], reverse=True)[:4]
+        move_scores = sorted(move_scores, key=lambda x: x[2], reverse=True)[:Piece.MOVE_CHOICES]
 
         return move_scores
 
@@ -366,7 +369,7 @@ class Piece:
         return (self, jump, score_dif)
 
     def ScoreAllJumps(color, board):
-        """This function calculates a score for all possible jumps, and returns a list of the 4 best."""
+        """This function calculates a score for all possible jumps, and returns a sorted list of their scores."""
 
         jump_scores = []
         jump_list = Piece.GetAllJumps(Piece.pieces[Piece.SameColor(color)], board)
@@ -375,17 +378,19 @@ class Piece:
         for jump in jump_list:
             jump_scores.append(Piece.JumpScoring(jump[0], jump[1], board))
 
-        jump_scores = sorted(jump_scores, key=lambda x: x[2], reverse=True)[:4]
+        jump_scores = sorted(jump_scores, key=lambda x: x[2], reverse=True)[:Piece.MOVE_CHOICES]
 
         return jump_scores
 
-    def ChooseMoveOrJump(options, difficulty=HARD):
+    def ChooseMoveOrJump(options):
         """This function takes the provided list of possible moves/jumps, and their scores and returns a choice of which move to makeself.
 
         This function weights each score according to the difficulty (with higher difficulties giving larger weights to better moves),
         then normalizes the scores, so that they sum to 1 (with better moves comprising a larger portion of that range),
         then selects a random number [0-1] and selects the move that falls within that range."""
-        weighted_scores = [m[2]*w for m, w in zip(options, difficulty)]         # m[2] is the score of the move in options.
+
+        weights = [(len(options) - i)*Piece.WEIGHT_MULTIPLIER for i in range(len(options))]
+        weighted_scores = [m[2]*w for m, w in zip(options, weights)]            # m[2] is the score of the move in options.
 
         s = sum(weighted_scores)
         if s == 0:
@@ -395,18 +400,9 @@ class Piece:
 
         choice = random.random()                                                # Random number [0-1]
 
-        if choice <= norms[0]:
-            move = options[0]
-
-        elif choice <= sum(norms[:2]):
-            move = options[1]
-
-        elif choice <= sum(norms[:3]):
-            move = options[2]
-
-        elif choice <= sum(norms[:4]):
-            move = options[3]
-
-        else: move = options[0]                                                 # Just in case, default to best move. This should never happen. I hope.
+        for i in range(len(norms)):
+            if choice <= sum(norms[:i+1]):
+                move = options[i]
+                break
 
         return move
