@@ -200,7 +200,7 @@ def PlayerTurn(color, board):
                 # If they choose another piece
                 if isinstance(selected_piece2, piece_type):
                     # If they select the original piece, deselect it, and let them choose another.
-                    if selected_piece2 == selected_piece1:
+                    if selected_piece2 == selected_piece1 and move_allowed:
                         DrawBoard(board)
                         step2 = True
                         step1 = False
@@ -208,7 +208,7 @@ def PlayerTurn(color, board):
                     # If they select an enemy piece, check if it can be jumped. If so, do it.
                     elif selected_piece2.color in Piece.OtherColor(color):
                         jump = (square_pos2[1] - square_pos1[1], square_pos2[0] - square_pos1[0])
-
+                        jumps = list(filter(lambda x: x[0] == selected_piece1, Piece.GetAllJumps(Piece.pieces[Piece.SameColor(color)], board))) 
                         for j in jumps:
                             if jump == j[1] and selected_piece1 == j[0]:
                                 Piece.DoJump(selected_piece1, jump, board)
