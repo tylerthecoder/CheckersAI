@@ -41,23 +41,24 @@ done = False
 while not done:
     done = mainWindow.isQuit() #did they click the exit button?
 
-    if mainWindow.isClick(): #did they click the grid
-
-        #check where click happened;
-        clickedSquare = mainWindow.getClickedSquare()
-        
-        #call player functions
-        if grid.turn == "r":
-            move = HumanPlayer(clickedSquare)
-        elif grid.turn == "b":
-            move = tgt_AI.AIPlayer(grid,"b")
-        
-        #            Make Move
-        #==================================
-        if move:
-            result = grid.applyMove(move)
-            if result:
-                selected = (-1,-1)
+    move = False
+    if grid.turn == "r":
+        #did they click the grid
+        if mainWindow.isClick(): 
+            #check where click happened;
+            clickedSquare = mainWindow.getClickedSquare()
+            
+            move = HumanPlayer(clickedSquare)   
+            
+    elif grid.turn == "b":
+        move = tgt_AI.AIPlayer(grid,"b")
+    
+    #Make the move
+    if move:
+        result = grid.applyMove(move)
+        if result:
+            #reset the player selection
+            selected = (-1,-1)
     
     mainWindow.draw(grid,selected)
  
