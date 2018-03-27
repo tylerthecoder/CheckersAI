@@ -7,7 +7,7 @@ import drawing
 import tgt_AI
 from board import Board, Move
 
-mainWindow = drawing.Window()
+mainWindow = drawing.Window((800,800))
 grid = Board("Standard")
 
 #==============================================

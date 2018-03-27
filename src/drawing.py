@@ -5,19 +5,23 @@ pygame.init()
 pygame.display.set_caption("Checkers")
 
 class Window():
-    size = (700, 700) #width and height of the screen
-    squareLength = math.floor(size[0]/8)
-    screen = pygame.display.set_mode(size)
-
     #Define some colors
-    black = (0, 0, 0)
+    black = (10, 10, 10)
     yellow = (255, 255, 0)
-    green = (0, 255, 0)
+    green = (0, 255, 20)
     red = (255, 0, 0)
     white = (255,255,255)
+    brown1 = (139,69,19)
+    brown2 = (244,164,96)
+
 
     clock = pygame.time.Clock() # Used to manage how fast the screen updates
     mousePressed = True #variable to make the mouse click only happen when mouse is clicked up and then down
+
+    def __init__(self,size):
+        self.squareLength = math.floor(size[0]/8)
+        self.size = (self.squareLength*8,self.squareLength*8)
+        self.screen = pygame.display.set_mode(self.size)
 
     def isQuit (self):
         for event in pygame.event.get():
@@ -46,11 +50,6 @@ class Window():
     def draw (self,grid,selected):
         #clear the screen
         self.screen.fill(self.white)
-        
-        #draw the lines
-        for i in range(0,9):
-            pygame.draw.line(self.screen, self.black, [i*self.size[0]/8, 0], [i*self.size[0]/8, self.size[1]], 5)
-            pygame.draw.line(self.screen, self.black, [0, i*self.size[0]/8], [self.size[1],i*self.size[0]/8], 5)
             
         #draw the grid
         for i in range(0,8):
@@ -59,9 +58,16 @@ class Window():
 
                 squareX = i*self.squareLength
                 squareY = j*self.squareLength
+
                 if selected == (i,j):
-                    pygame.draw.rect(self.screen,self.green,[squareX,squareY,self.squareLength,self.squareLength])
+                    squareColor = self.green
+                elif (i+j)%2 == 0:
+                    squareColor = self.brown2
+                else:
+                    squareColor = self.brown1
                 
+                pygame.draw.rect(self.screen,squareColor,[squareX,squareY,self.squareLength,self.squareLength])
+
                 circleX = math.floor(i*self.squareLength+self.squareLength/2)
                 circleY = math.floor(j*self.squareLength+self.squareLength/2)
                 radius = math.floor(self.size[0]/32)
@@ -74,5 +80,11 @@ class Window():
                 #draw if it is a king
                 if grid.board[spot].king:
                     pygame.draw.circle(self.screen,self.yellow,[circleX,circleY],math.floor(radius/4))
+
+         #draw the lines
+        for i in range(0,9):
+            pygame.draw.line(self.screen, self.black, [i*self.size[0]/8, 0], [i*self.size[0]/8, self.size[1]], 4)
+            pygame.draw.line(self.screen, self.black, [0, i*self.size[0]/8], [self.size[1],i*self.size[0]/8], 4)
+        
         #Go ahead and update the screen with what we've drawn.
-        pygame.display.flip()                
+        pygame.display.flip()
