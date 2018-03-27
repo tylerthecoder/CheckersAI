@@ -17,13 +17,16 @@ grid = Board("Standard")
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
 def HumanPlayer(click):
     global selected
-    if selected == (-1,-1):
-        if grid.board[click].color == grid.turn:
-            selected = click
-        else:
-            print("Wrong Turn")
-    elif selected == click:
+
+    #if you click the piece that you already selected, then unselect
+    if selected == click:
         selected = (-1,-1)
+
+    #if you click your piece, then select it
+    elif grid.board[click].color == grid.turn:
+        selected = click
+    
+    #try to play
     else:
         move = Move(selected,clickedSquare,grid)
         res = grid.checkMove(move)
