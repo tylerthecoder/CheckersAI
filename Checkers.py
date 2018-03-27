@@ -9,6 +9,7 @@ import math
 import random
 
 from board import *
+from AI import *
 
 #Define some colors
 black = (0, 0, 0)
@@ -35,7 +36,7 @@ grid = Board("Standard")
 #==============================================
 
 selected = (-1,-1) #this stores the value of the grid square that is currently selected
-def RedPlayer(click):
+def HumanPlayer(click):
     global selected
     if selected == (-1,-1):
         if grid.board[click].color == grid.turn:
@@ -45,27 +46,14 @@ def RedPlayer(click):
     elif selected == click:
         selected = (-1,-1)
     else:
-        res = grid.checkMove(selected,clickedSquare,grid.turn)
+        move = Move(selected,clickedSquare,grid)
+        res = grid.checkMove(move)
         if res["valid"]: #if the move was sucsessful
-            return res
+            return move
         else:
             print(res["error"])
             return False
     
-
-def BlackPlayer():
-    allMoves = grid.getAllMoves("b")
-    move = random.choice(allMoves)
-    res = grid.checkMove(move["start"],move["end"],"b")
-    count = 0 #in case we get an infinite loop somehow
-    while not res["valid"]: #keep trying until we get a valid move
-        count = count + 1
-        move = random.choice(allMoves)
-        res = grid.checkMove(move["start"],move["end"],"b")
-        if count > 100:
-            print("something went wrong")
-            break
-    return res
 
 #=============================================
 #           Main Program Loop
@@ -84,16 +72,18 @@ while not done:
         
         #call player functions
         if grid.turn == "r":
-            res = RedPlayer(clickedSquare)
+            move = AIPlayer(grid,"r")
+            #move = AIPlayer(grid,"r")
         elif grid.turn == "b":
-            res = BlackPlayer()
+            move = HumanPlayer(clickedSquare)
         
         #            Make Move
         #==================================
-        if res:
-            result = grid.applyMove(res["start"],res["end"],grid.turn)
+        if move:
+            result = grid.applyMove(move)
             if result:
                 selected = (-1,-1)
+            
 
     elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
         mousePressed = False
