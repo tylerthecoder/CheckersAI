@@ -10,12 +10,13 @@ class Board():
     dbjIndices = (-1,-1)
     turn = "r"
 
+
     def __init__(self,boardType,copy=False):
         self.board = {}
-        #if you want to make a standard board
         for spot in self.indices:
             row = spot[0]
             col = spot[1]
+            #the regular board
             if boardType == "Standard":
                 if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
                     char = "r" #set the square to be red
@@ -24,18 +25,27 @@ class Board():
                 else:
                     char = "N" #set the square to be empty
                 self.board[spot] = Spot(char)
+            #an empty board
             elif boardType == "Empty":
                 self.board[spot] = Spot("N")
+            #Copy of another board, passed in as second argument
             elif boardType == "Copy":
                 self.board[spot] = Spot(copy.board[spot].color)
+            #just make an empty board
             else:
                 self.board[spot] = Spot("N")
+        
+        #if you want to test a double jump
         if boardType == "dbj":
             self.board[(2,2)] = Spot("r")
             self.board[(4,4)] = Spot("r")
             self.board[(5,5)] = Spot("b")
+
+        #need to copy over the state of the board as well
         if boardType == "Copy":
             self.turn = copy.turn
+            self.dbjIndices = copy.dbjIndices
+            self.isJumpAv = copy.isJumpAv
 
     def isRealSpot(self,spot):
         if spot[0] < 0 or spot[0] > 7:
@@ -70,9 +80,10 @@ class Board():
 
         #king everyone
         self.kingPieces()
-
-        #is there a dbj on the board?
-        dbj = False
+        
+        dbj = False #flag to see if dbj happened
+        
+        #did you just jump?
         if move.jump:
             #delete the piece that you jumpped over
             self.board[move.end] = Spot("N")
@@ -93,7 +104,7 @@ class Board():
             self.nextTurn()
             self.dbjIndices = (-1,-1)
 
-        #cal is there is a jump on this board, do now so the computation doesn't have to be done over and over
+        #is there is a jump on this board, do now so the computation doesn't have to be done over and over
         self.isJumpAv = len(self.getAllMoves(self.turn,True)) > 0
 
         return True
