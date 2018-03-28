@@ -28,7 +28,14 @@ class Window():
             if event.type == pygame.QUIT:
                 return True
         return False
-    
+
+    def waitForClick(self):
+        while not self.isQuit():
+            if self.isClick():
+                return self.getClickedSquare()
+
+            self.tick()
+
     def QuitGame (self):
         pygame.quit()
 
@@ -42,6 +49,7 @@ class Window():
         elif pygame.mouse.get_pressed()[0] == 0: #mouse is up
             self.mousePressed = False
             return False
+        return False
 
     def getClickedSquare (self):
         pos = pygame.mouse.get_pos()

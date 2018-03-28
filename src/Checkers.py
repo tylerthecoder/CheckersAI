@@ -3,8 +3,7 @@
 # Author: Tyler Tracy
 # Purpose: To simulate the game of checkers and to make it easier for an AI to play
 #================================
-import sys
-import drawing
+import sys, drawing
 from board import Board, Move
 
 sys.path.insert(0, '/AI')
@@ -21,11 +20,9 @@ selected = (-1,-1) #this stores the value of the grid square that is currently s
 def HumanPlayer(grid):
     global selected
 
-    if not mainWindow.isClick():
-        #user didn't click anything 
-        return False
 
-    click = mainWindow.getClickedSquare()
+    click = mainWindow.waitForClick()
+    print(click)
 
     #if you click the piece that you already selected, then unselect
     if selected == click:
@@ -49,12 +46,12 @@ def HumanPlayer(grid):
 #=============================================
 #           Main Program Loop
 #=============================================
-done = False
-while not done:
-    done = mainWindow.isQuit() #did they click the exit button?
 
+#did they click the exit button?
+gameOver = False
+while not gameOver:
 
-    move = False
+    mainWindow.draw(grid,selected)
 
     if grid.turn == "r":
         # move = AI.rand_AI.AIPlayer(grid,"r")
@@ -69,12 +66,7 @@ while not done:
         if result:
             #reset the player selection
             selected = (-1,-1)
-    
-
-
-    mainWindow.draw(grid,selected)
- 
-    mainWindow.tick() #Go to the next frame
+            
  
 # Close the window and quit.
 mainWindow.QuitGame()
