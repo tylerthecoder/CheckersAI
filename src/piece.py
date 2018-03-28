@@ -1,11 +1,12 @@
 class Spot:
-    def __init__(self, color):
+    def __init__(self, color, pos):
         if color != "N": #it is a piece
             self.isPlayer = True
         else:
             self.isPlayer = False
         self.color = color
         self.king = False
+        self.pos = pos
     
     def kingMe(self):
         self.king = True

@@ -11,6 +11,10 @@ class Board():
     selected = (-1,-1)
     turn = "r"
 
+    pieces = {
+        "r":[],
+        "b":[]
+    }
 
     def __init__(self,boardType,copy=False):
         self.board = {}
@@ -26,21 +30,22 @@ class Board():
                     char = "b" #set the square to be black
                 else:
                     char = "N" #set the square to be empty
-                self.board[spot] = Spot(char)
+                newSpot = Spot(char,spot)
+                self.board[spot] = newSpot
+                if char != "N":
+                    self.pieces[char].append(newSpot)
 
         #if you want to copy the board
         elif boardType == "Copy":
             for spot in self.indices:
-                self.board[spot] = Spot(copy.board[spot].color)
+                newSpot = Spot(None,None).setMe(copy.board[spot])
+                self.board[spot] = newSpot
+                if newSpot.isPlayer:
+                    self.pieces[newSpot.color].append(newSpot)
+                
             self.turn = copy.turn
             self.dbjIndices = copy.dbjIndices
             self.isJumpAv = copy.isJumpAv
-        
-        #if you want to test a double jump
-        if boardType == "dbj":
-            self.board[(2,2)] = Spot("r")
-            self.board[(4,4)] = Spot("r")
-            self.board[(5,5)] = Spot("b")
 
 
     def isRealSpot(self,spot):
@@ -58,7 +63,7 @@ class Board():
 
     def movePiece(self,fromPos,toPos):
         self.board[toPos].setMe(self.board[fromPos])
-        self.board[fromPos] = Spot("N") #delete piece in spot
+        self.board[fromPos] = Spot("N",fromPos) #delete piece in spot
 
     def kingPieces (self):
         for spot in self.indices:
@@ -82,7 +87,7 @@ class Board():
         #did you just jump?
         if move.jump:
             #delete the piece that you jumpped over
-            self.board[move.end] = Spot("N")
+            self.board[move.end] = Spot("N",move.end)
 
             #get all jumps
             jumps = self.getAllMoves(self.turn,True)
@@ -168,7 +173,15 @@ class Board():
                 p = self.board[(row,col)]
                 rowStr += p.color
             print(rowStr)
-            
+
+    def printP(self):
+        print("Red")
+        for pie in self.pieces["r"]:
+            print(pie.pos)
+        print("Black")
+        for pie in self.pieces["b"]:
+            print(pie.pos)
+        
 
 
 
