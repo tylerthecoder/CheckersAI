@@ -1,6 +1,6 @@
 import random
 
-def AIPlayer (board,turn):
+def play (board):
     allMoves = board.getAllMoves(board.turn)
     goodMoves = []
     for move in allMoves:

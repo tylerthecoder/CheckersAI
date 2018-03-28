@@ -55,7 +55,7 @@ class Window():
         pos = pygame.mouse.get_pos()
         return (math.floor(pos[0]/(self.size[0]/8)),math.floor(pos[1]/(self.size[1]/8)))
 
-    def draw (self,grid,selected):
+    def draw (self,grid):
         #clear the screen
         self.screen.fill(self.white)
             
@@ -67,7 +67,7 @@ class Window():
                 squareX = i*self.squareLength
                 squareY = j*self.squareLength
 
-                if selected == (i,j):
+                if grid.selected == (i,j):
                     squareColor = self.green
                 elif (i+j)%2 == 0:
                     squareColor = self.brown2
