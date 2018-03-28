@@ -13,11 +13,12 @@ class Board():
 
     def __init__(self,boardType,copy=False):
         self.board = {}
-        for spot in self.indices:
-            row = spot[0]
-            col = spot[1]
-            #the regular board
-            if boardType == "Standard":
+        
+        #the regular board
+        if boardType == "Standard":
+            for spot in self.indices:
+                row = spot[0]
+                col = spot[1]
                 if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
                     char = "r" #set the square to be red
                 elif col > 4 and (row+col)%2 == 0:
@@ -25,15 +26,14 @@ class Board():
                 else:
                     char = "N" #set the square to be empty
                 self.board[spot] = Spot(char)
-            #an empty board
-            elif boardType == "Empty":
-                self.board[spot] = Spot("N")
-            #Copy of another board, passed in as second argument
-            elif boardType == "Copy":
+
+        #if you want to copy the board
+        elif boardType == "Copy":
+            for spot in self.indices:
                 self.board[spot] = Spot(copy.board[spot].color)
-            #just make an empty board
-            else:
-                self.board[spot] = Spot("N")
+            self.turn = copy.turn
+            self.dbjIndices = copy.dbjIndices
+            self.isJumpAv = copy.isJumpAv
         
         #if you want to test a double jump
         if boardType == "dbj":
@@ -41,11 +41,6 @@ class Board():
             self.board[(4,4)] = Spot("r")
             self.board[(5,5)] = Spot("b")
 
-        #need to copy over the state of the board as well
-        if boardType == "Copy":
-            self.turn = copy.turn
-            self.dbjIndices = copy.dbjIndices
-            self.isJumpAv = copy.isJumpAv
 
     def isRealSpot(self,spot):
         if spot[0] < 0 or spot[0] > 7:

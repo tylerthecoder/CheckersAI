@@ -10,7 +10,7 @@ from board import Board, Move
 sys.path.insert(0, '/AI')
 import AI.tgt_AI, AI.rand_AI
 
-mainWindow = drawing.Window((800,800))
+mainWindow = drawing.Window((600,600))
 grid = Board("Standard")
 
 #==============================================
