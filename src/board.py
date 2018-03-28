@@ -1,5 +1,6 @@
 from piece import *
 from move import *
+import copy as cpy
 
 class Board():
     indices = []
@@ -24,6 +25,11 @@ class Board():
             for spot in self.indices:
                 row = spot[0]
                 col = spot[1]
+                # if (row+col)%2 == 0:
+                #     char = "r" if col < 3 elif col > 4 "b" else "N"
+                # else:
+                #     char = "N"
+
                 if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
                     char = "r" #set the square to be red
                 elif col > 4 and (row+col)%2 == 0:
@@ -37,12 +43,18 @@ class Board():
 
         #if you want to copy the board
         elif boardType == "Copy":
+            print("This is the copy")
+            copy.printP()
+            self.pieces["r"] = []
+            self.pieces["b"] = []
             for spot in self.indices:
-                newSpot = Spot(None,None).setMe(copy.board[spot])
+                newSpot = Spot(None,None)
+                newSpot.setMe(copy.board[spot])
                 self.board[spot] = newSpot
                 if newSpot.isPlayer:
                     self.pieces[newSpot.color].append(newSpot)
-                
+            
+            self.window = copy.window
             self.turn = copy.turn
             self.dbjIndices = copy.dbjIndices
             self.isJumpAv = copy.isJumpAv
@@ -61,7 +73,15 @@ class Board():
         elif self.turn == "b":
             self.turn = "r"
 
-    def movePiece(self,fromPos,toPos):
+    def movePiece(self,fromPos,toPos,test):
+        if test:
+            bufferPos = self.board[fromPos].pos
+            self.board[fromPos].pos = self.board[toPos].pos
+            self.board[toPos].pos = bufferPos
+        else:
+            self.board[fromPos].setPos("poop")
+            self.board[toPos].setPos("poop")
+        
         self.board[toPos].setMe(self.board[fromPos])
         self.board[fromPos] = Spot("N",fromPos) #delete piece in spot
 
@@ -72,12 +92,12 @@ class Board():
             elif self.board[spot].color == "b" and spot[1] == 0: #if it is black and on the top row
                 self.board[spot].kingMe()
 
-    def applyMove(self,move):
+    def applyMove(self,move, test = False):
         if not self.checkMove(move)["valid"]:
             return False
         
         #move the starting piece to the new location
-        self.movePiece(move.start,move.drop)
+        self.movePiece(move.start,move.drop,test)
 
         #king everyone
         self.kingPieces()
@@ -177,10 +197,12 @@ class Board():
     def printP(self):
         print("Red")
         for pie in self.pieces["r"]:
-            print(pie.pos)
+            print(pie, pie.pos)
         print("Black")
         for pie in self.pieces["b"]:
-            print(pie.pos)
+            print(pie, pie.pos)
+        
+        print("End", len(self.pieces["r"]))
         
 
 

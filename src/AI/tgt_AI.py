@@ -17,6 +17,9 @@ boardVals = [
 
 
 def play (board):
+    board = Board("Copy",board)
+    print("Copy Board")
+    board.printP()
     turn = board.turn
     allMoves = board.getAllMoves(turn)
     best = -10000000
@@ -25,8 +28,11 @@ def play (board):
         if board.checkMove(move)["valid"]:
             #calculate the average of all the boardValues two turns in
             # spdb.set_trace()
+            
+            
             newBoard = Board("Copy",board)
             newBoard.applyMove(move)
+            # newBoard.printP()
             avg = recursiveMoveFinder(newBoard,3,turn)
             print(move.start,move.end,avg)
             if avg > best:
