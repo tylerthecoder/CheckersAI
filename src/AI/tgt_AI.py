@@ -16,7 +16,8 @@ boardVals = [
 
 
 
-def AIPlayer (board,turn):
+def play (board):
+    turn = board.turn
     allMoves = board.getAllMoves(turn)
     best = -10000000
     bestMove = [allMoves[0]]

@@ -8,6 +8,7 @@ class Board():
             indices.append((row,col))
     isJumpAv = False
     dbjIndices = (-1,-1)
+    selected = (-1,-1)
     turn = "r"
 
 
