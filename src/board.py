@@ -2,6 +2,24 @@ from piece import *
 from move import *
 import copy as cpy
 
+
+def CopyBoard(board):
+    copyWindow = board.window
+    board.window = False
+    newBoard = cpy.deepcopy(board)
+    for spot in newBoard.indices:
+        newSpot = Spot(None,None)
+        newSpot.setMe(board.board[spot])
+        # newBoard.board[spot] = newSpot
+        # if newSpot.isPlayer:
+        #     newBoard.pieces[newSpot.color].append(newSpot)
+    
+    board.window = copyWindow
+    return newBoard
+
+
+
+
 class Board():
     indices = []
     for col in range(8):
@@ -43,16 +61,19 @@ class Board():
 
         #if you want to copy the board
         elif boardType == "Copy":
-            print("This is the copy")
+            print("Before")
             copy.printP()
             self.pieces["r"] = []
             self.pieces["b"] = []
+            print("After")
+            copy.printP()
+
             for spot in self.indices:
                 newSpot = Spot(None,None)
                 newSpot.setMe(copy.board[spot])
                 self.board[spot] = newSpot
-                if newSpot.isPlayer:
-                    self.pieces[newSpot.color].append(newSpot)
+                if newSpot.isPlayer: tyler = 2
+                    # self.pieces[newSpot.color].append(newSpot)
             
             self.window = copy.window
             self.turn = copy.turn
@@ -198,11 +219,11 @@ class Board():
         print("Red")
         for pie in self.pieces["r"]:
             print(pie, pie.pos)
-        print("Black")
-        for pie in self.pieces["b"]:
-            print(pie, pie.pos)
+        # print("Black")
+        # for pie in self.pieces["b"]:
+        #     print(pie, pie.pos)
         
-        print("End", len(self.pieces["r"]))
+        # print("End", len(self.pieces["r"]))
         
 
 

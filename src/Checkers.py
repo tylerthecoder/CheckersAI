@@ -3,9 +3,9 @@
 # Author: Tyler Tracy
 # Purpose: To simulate the game of checkers and to make it easier for an AI to play
 #================================
-import sys, drawing
+import sys, drawing, copy
 sys.path.insert(0, '/AI')
-from board import Board, Move
+from board import Board, Move, CopyBoard
 import AI.tgt_AI, AI.rand_AI, AI.human
 
 import pdb
@@ -23,11 +23,12 @@ mainWindow.draw(grid)
 
 
 grid.printP()
-newBoard = Board("Copy",grid)
-# newBoard.printP()
+newBoard = CopyBoard(grid)
 grid.printP()
+newBoard.printP()
 
 
+pdb.set_trace()
 
 # pdb.set_trace()
 
