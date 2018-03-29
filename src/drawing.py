@@ -58,7 +58,11 @@ class Window():
     def draw (self,grid):
         #clear the screen
         self.screen.fill(self.white)
-            
+        
+        redP = []
+        for pie in grid.pieces["r"]:
+            redP.append(pie.pos)
+        
         #draw the grid
         for i in range(0,8):
             for j in range(0,8):
@@ -69,6 +73,8 @@ class Window():
 
                 if grid.selected == (i,j):
                     squareColor = self.green
+                elif (i,j) in redP:
+                    squareColor = self.yellow
                 elif (i+j)%2 == 0:
                     squareColor = self.brown2
                 else:

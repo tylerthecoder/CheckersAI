@@ -5,7 +5,7 @@
 #================================
 import sys, drawing, copy
 sys.path.insert(0, '/AI')
-from board import Board, Move, CopyBoard
+from board import Board, Move
 import AI.tgt_AI, AI.rand_AI, AI.human
 
 import pdb
@@ -15,14 +15,13 @@ grid = Board("Standard")
 grid.window = mainWindow
 
 Player1 = AI.human
-Player2 = AI.tgt_AI
+Player2 = AI.human
 
 
 gameOver = False
 
 while not gameOver:
 
-    
     mainWindow.draw(grid)
     #copyBoard = Board("Copy",grid)
     if grid.turn == "r":
@@ -31,10 +30,9 @@ while not gameOver:
         move = Player2.play(grid)
     
     #Make the move
-    grid.printP()
     if move:
-        pdb.set_trace()
         result = grid.applyMove(move,True)
+        print("=============Next Move==================")
 
  
 # Close the window and quit.

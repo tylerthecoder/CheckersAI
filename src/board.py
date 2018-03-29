@@ -1,27 +1,8 @@
 from piece import *
 from move import *
-import copy as cpy
-
-
-def CopyBoard(board):
-    copyWindow = board.window
-    board.window = False
-    newBoard = cpy.deepcopy(board)
-    for spot in newBoard.indices:
-        newSpot = Spot(None,None)
-        newSpot.setMe(board.board[spot])
-        # newBoard.board[spot] = newSpot
-        # if newSpot.isPlayer:
-        #     newBoard.pieces[newSpot.color].append(newSpot)
-    
-    board.window = copyWindow
-    return newBoard
-
-
-
+import pdb
 
 class Board():
-
     def __init__(self,boardType,copy=False):
         self.board = {}
         self.indices = []
@@ -88,13 +69,17 @@ class Board():
         elif self.turn == "b":
             self.turn = "r"
 
-    def movePiece(self,fromPos,toPos,test):
+    def movePiece(self,fromPos,toPos):
         bufferPos = self.board[fromPos].pos
         self.board[fromPos].pos = self.board[toPos].pos
         self.board[toPos].pos = bufferPos
-        
-        self.board[toPos].setMe(self.board[fromPos])
-        self.board[fromPos] = Spot("N",fromPos) #delete piece in spot
+
+        bufferPie = self.board[fromPos] 
+        self.board[fromPos] = self.board[toPos]
+        self.board[toPos] = bufferPie
+
+        #maybe check for king here, might make it quicker
+
 
     def kingPieces (self):
         for spot in self.indices:
@@ -108,7 +93,7 @@ class Board():
             return False
         
         #move the starting piece to the new location
-        self.movePiece(move.start,move.drop,test)
+        self.movePiece(move.start,move.drop)
 
         #king everyone
         self.kingPieces()
@@ -118,6 +103,10 @@ class Board():
         #did you just jump?
         if move.jump:
             #delete the piece that you jumpped over
+            for index, pie in enumerate(self.pieces[self.board[move.end].color]):
+                if move.end == pie.pos:
+                    del self.pieces[self.board[move.end].color][index]
+            
             self.board[move.end] = Spot("N",move.end)
 
             #get all jumps
@@ -208,12 +197,12 @@ class Board():
     def printP(self):
         print("Red")
         for pie in self.pieces["r"]:
-            print(pie, pie.pos)
+            print(pie,pie.pos)
         print("Black")
         for pie in self.pieces["b"]:
-            print(pie, pie.pos)
+            print(pie,pie.pos)
         
-        print("End", len(self.pieces["r"]))
+        print("End", len(self.pieces["r"]), len(self.pieces["b"]))
         
 
 
