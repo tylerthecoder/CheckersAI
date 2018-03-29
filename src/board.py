@@ -1,6 +1,5 @@
 from piece import *
 from move import *
-import pdb
 
 class Board():
     def __init__(self,boardType,copy=False):
@@ -91,7 +90,7 @@ class Board():
             elif self.board[spot].color == "b" and spot[1] == 0: #if it is black and on the top row
                 self.board[spot].kingMe()
 
-    def applyMove(self,move, test = False):
+    def applyMove(self,move):
         if not self.checkMove(move)["valid"]:
             return False
         
