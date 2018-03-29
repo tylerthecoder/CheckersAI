@@ -1,6 +1,3 @@
-import sys
-sys.path.append("../")
-from board import *
 
 def play(grid):
     
@@ -16,7 +13,7 @@ def play(grid):
     
     #try to play
     else:
-        move = Move(grid.selected,click,grid)
+        move = grid.makeMove(grid.selected,click)
         res = grid.checkMove(move)
         if res["valid"]: #if the move was sucsessful
             grid.selected = (-1,-1)
