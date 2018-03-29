@@ -13,7 +13,10 @@ grid = Board()
 grid.window = mainWindow
 
 Player1 = AI.human
-Player2 = AI.tgt_AI
+Player2 = AI.human
+
+
+#This is my version
 
 #main loop
 while not grid.isGameOver()[0]:
@@ -21,10 +24,10 @@ while not grid.isGameOver()[0]:
     mainWindow.draw(grid)
 
     if grid.turn == "r":
-        move = Player1.play(grid)  
+        move = Player1.play(grid)
     elif grid.turn == "b":
         move = Player2.play(grid)
-    
+
     #Make the move
     if move:
         result = grid.applyMove(move)
@@ -35,6 +38,6 @@ if grid.isGameOver()[1] == "r":
     print("Black won the game")
 elif grid.isGameOver()[1] == "b":
     print("Red won the game")
- 
+
 # Close the window and quit.
 mainWindow.QuitGame()
