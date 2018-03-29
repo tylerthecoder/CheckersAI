@@ -1,7 +1,6 @@
 import random
-import sys
-sys.path.append("../")
-from board import *
+import pdb
+
 
 def play (board):
     turn = board.turn
@@ -11,7 +10,7 @@ def play (board):
     for move in allMoves:
         if board.checkMove(move)["valid"]:
             #calculate the average of all the boardValues two turns in
-            newBoard = Board("Copy",board)
+            newBoard = board.copy()
             newBoard.applyMove(move)
 
             avg = recursiveMoveFinder(newBoard,3,turn)
@@ -23,6 +22,7 @@ def play (board):
                 bestMove.append(move)
         
     print("===================End of AI Turn=========================")
+    # pdb.set_trace()
     return random.choice(bestMove)
 
 
@@ -31,7 +31,7 @@ def recursiveMoveFinder (board,depth,turn):
     allMoves = board.getAllMoves(board.turn)
     for move in allMoves:
         if board.checkMove(move)["valid"]:
-            newBoard = Board("Copy",board)
+            newBoard = board.copy()
             newBoard.applyMove(move)
             avg += boardValue(newBoard,turn,depth+1)
             if depth > 0:

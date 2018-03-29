@@ -1,7 +1,4 @@
 import random
-import sys
-sys.path.append("../")
-from board import *
 
 #going to try to use min max
 
@@ -14,12 +11,18 @@ def play (board):
     for move in allMoves:
         if board.checkMove(move)["valid"]:
             #calculate the average of all the boardValues two turns in
-            newBoard = Board("Copy",board)
+            newBoard = board.copy()
             newBoard.applyMove(move)
 
             #check for dbj
+            while (newBoard.dbjIndices != (-1,-1)):
+                print("Taking the dbj")
+                moves = board.getMovesForPiece(newBoard.board[newBoard.dbjIndices])
+                
+                newBoard.applyMove(nextMove)
 
-            avg = recursiveMoveFinder(newBoard,3,turn)
+
+            avg = 0#recursiveMoveFinder(newBoard,3,turn)
             print(move.start,move.end,avg)
             if avg > best:
                 best = avg
