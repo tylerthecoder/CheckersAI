@@ -3,6 +3,9 @@ import sys
 sys.path.append("../")
 from board import *
 
+#going to try to use min max
+
+
 def play (board):
     turn = board.turn
     allMoves = board.getAllMoves(turn)
@@ -14,6 +17,8 @@ def play (board):
             newBoard = Board("Copy",board)
             newBoard.applyMove(move)
 
+            #check for dbj
+
             avg = recursiveMoveFinder(newBoard,3,turn)
             print(move.start,move.end,avg)
             if avg > best:
@@ -24,6 +29,17 @@ def play (board):
         
     print("===================End of AI Turn=========================")
     return random.choice(bestMove)
+
+
+def evalMove (grid,turn):
+    amount = 0
+    for pie in grid.pieces[turn]:
+        amount += 4 if pie.king else 1
+
+    for pie in grid.pieces[grid.otherColor(turn)]:
+        amount -= 4  if pie.king else 1
+    
+    allMoves = grid.getAllMoves(grid.turn)
 
 
 def recursiveMoveFinder (board,depth,turn):

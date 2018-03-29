@@ -3,7 +3,7 @@
 # Author: Tyler Tracy
 # Purpose: To simulate the game of checkers and to make it easier for an AI to play
 #================================
-import sys, drawing
+import sys, drawing, copy
 sys.path.insert(0, '/AI')
 from board import Board, Move
 import AI.tgt_AI, AI.rand_AI, AI.human
@@ -16,6 +16,7 @@ Player1 = AI.human
 Player2 = AI.tgt_AI
 
 gameOver = False
+
 while not gameOver:
 
     mainWindow.draw(grid)
@@ -28,7 +29,6 @@ while not gameOver:
     #Make the move
     if move:
         result = grid.applyMove(move)
-            
 
  
 # Close the window and quit.

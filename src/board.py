@@ -2,45 +2,57 @@ from piece import *
 from move import *
 
 class Board():
-    indices = []
-    for col in range(8):
-        for row in range(8):
-            indices.append((row,col))
-    isJumpAv = False
-    dbjIndices = (-1,-1)
-    selected = (-1,-1)
-    turn = "r"
-
-
     def __init__(self,boardType,copy=False):
         self.board = {}
-        
+        self.indices = []
+        for col in range(8):
+            for row in range(8):
+                self.indices.append((row,col))
+        self.isJumpAv = False
+        self.dbjIndices = (-1,-1)
+        self.selected = (-1,-1)
+        self.turn = "r"
+
+        self.pieces = {
+            "r":[],
+            "b":[]
+        }
+
         #the regular board
         if boardType == "Standard":
             for spot in self.indices:
                 row = spot[0]
                 col = spot[1]
+                # if (row+col)%2 == 0:
+                #     char = "r" if col < 3 elif col > 4 "b" else "N"
+                # else:
+                #     char = "N"
+
                 if col < 3 and (row+col)%2 == 0: #check if (row,col) is in the checker diagonal
                     char = "r" #set the square to be red
                 elif col > 4 and (row+col)%2 == 0:
                     char = "b" #set the square to be black
                 else:
                     char = "N" #set the square to be empty
-                self.board[spot] = Spot(char)
+                newSpot = Spot(char,spot)
+                self.board[spot] = newSpot
+                if char != "N":
+                    self.pieces[char].append(newSpot)
 
         #if you want to copy the board
         elif boardType == "Copy":
+
             for spot in self.indices:
-                self.board[spot] = Spot(copy.board[spot].color)
+                newSpot = Spot(None,None)
+                newSpot.setMe(copy.board[spot])
+                self.board[spot] = newSpot
+                if newSpot.isPlayer:
+                    self.pieces[newSpot.color].append(newSpot)
+            
+            self.window = copy.window
             self.turn = copy.turn
             self.dbjIndices = copy.dbjIndices
             self.isJumpAv = copy.isJumpAv
-        
-        #if you want to test a double jump
-        if boardType == "dbj":
-            self.board[(2,2)] = Spot("r")
-            self.board[(4,4)] = Spot("r")
-            self.board[(5,5)] = Spot("b")
 
 
     def isRealSpot(self,spot):
@@ -56,9 +68,20 @@ class Board():
         elif self.turn == "b":
             self.turn = "r"
 
+    def otherColor (self,color):
+        return "r" if color == "b" else "b"
+
     def movePiece(self,fromPos,toPos):
-        self.board[toPos].setMe(self.board[fromPos])
-        self.board[fromPos] = Spot("N") #delete piece in spot
+        bufferPos = self.board[fromPos].pos
+        self.board[fromPos].pos = self.board[toPos].pos
+        self.board[toPos].pos = bufferPos
+
+        bufferPie = self.board[fromPos] 
+        self.board[fromPos] = self.board[toPos]
+        self.board[toPos] = bufferPie
+
+        #maybe check for king here, might make it quicker
+
 
     def kingPieces (self):
         for spot in self.indices:
@@ -82,7 +105,11 @@ class Board():
         #did you just jump?
         if move.jump:
             #delete the piece that you jumpped over
-            self.board[move.end] = Spot("N")
+            for index, pie in enumerate(self.pieces[self.board[move.end].color]):
+                if move.end == pie.pos:
+                    del self.pieces[self.board[move.end].color][index]
+            
+            self.board[move.end] = Spot("N",move.end)
 
             #get all jumps
             jumps = self.getAllMoves(self.turn,True)
@@ -133,14 +160,15 @@ class Board():
 
     def getAllMoves(self,player,jumps=False):
         allMoves = []
-        for spot in self.indices:
-            if self.board[spot].color == player:
-                moves = self.getMovesForPiece(spot,jumps)
+        for pie in self.pieces[player]:
+            if pie.color == player:
+                moves = self.getMovesForPiece(pie,jumps)
                 allMoves += moves
         return allMoves
 
     def getMovesForPiece(self,spot,jumps=False):
         allMoves = []
+        spot = spot.pos
         rngi = [-1,1]
         if self.board[spot]:
             rngj = [-1,1]
@@ -148,7 +176,7 @@ class Board():
             rngj = [1]
         elif  self.board[spot].color == "b":
             rngj = [-1]
-        
+
         for i in rngi:
             for j in rngj:
                 check = (spot[0]+i,spot[1]+j)
@@ -168,7 +196,17 @@ class Board():
                 p = self.board[(row,col)]
                 rowStr += p.color
             print(rowStr)
-            
+
+    def printP(self):
+        print("Red")
+        for pie in self.pieces["r"]:
+            print(pie,pie.pos)
+        print("Black")
+        for pie in self.pieces["b"]:
+            print(pie,pie.pos)
+        
+        print("End", len(self.pieces["r"]), len(self.pieces["b"]))
+        
 
 
 

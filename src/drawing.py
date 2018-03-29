@@ -6,10 +6,12 @@ pygame.display.set_caption("Checkers")
 
 class Window():
     #Define some colors
-    black = (10, 10, 10)
+    black = (30, 30, 30)
+    darkBlack = (0,0,0)
     yellow = (255, 255, 0)
     green = (0, 255, 20)
     red = (255, 0, 0)
+    darkRed = (200,10,10)
     white = (255,255,255)
     brown1 = (139,69,19)
     brown2 = (244,164,96)
@@ -58,7 +60,7 @@ class Window():
     def draw (self,grid):
         #clear the screen
         self.screen.fill(self.white)
-            
+        
         #draw the grid
         for i in range(0,8):
             for j in range(0,8):
@@ -81,9 +83,11 @@ class Window():
                 radius = math.floor(self.size[0]/32)
                 
                 if grid.board[(i,j)].color == "r":
-                    pygame.draw.circle(self.screen, self.red, [circleX, circleY], radius)
+                    pygame.draw.circle(self.screen, self.darkRed, [circleX, circleY], radius)
+                    pygame.draw.circle(self.screen, self.red, [circleX, circleY], math.floor(radius/1.1))
                 elif grid.board[(i,j)].color == "b":
-                    pygame.draw.circle(self.screen, self.black, [circleX, circleY], radius)
+                    pygame.draw.circle(self.screen, self.darkBlack, [circleX, circleY], radius)
+                    pygame.draw.circle(self.screen, self.black, [circleX, circleY], math.floor(radius/1.1))
                 
                 #draw if it is a king
                 if grid.board[spot].king:
