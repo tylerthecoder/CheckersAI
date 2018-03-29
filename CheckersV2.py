@@ -18,6 +18,6 @@ while not d:
     color = bf.SwitchColor(color)
     d = next(done)
 
-    bf.PlayerTurn(color, BOARD)
-    d = next(done)
-    color = bf.SwitchColor(color)
+    # bf.PlayerTurn(color, BOARD)
+    # d = next(done)
+    # color = bf.SwitchColor(color)
