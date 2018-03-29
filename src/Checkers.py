@@ -19,18 +19,6 @@ Player2 = AI.tgt_AI
 
 
 gameOver = False
-mainWindow.draw(grid)
-
-
-grid.printP()
-newBoard = CopyBoard(grid)
-grid.printP()
-newBoard.printP()
-
-
-pdb.set_trace()
-
-# pdb.set_trace()
 
 while not gameOver:
 
@@ -45,6 +33,7 @@ while not gameOver:
     #Make the move
     grid.printP()
     if move:
+        pdb.set_trace()
         result = grid.applyMove(move,True)
 
  

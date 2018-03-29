@@ -21,23 +21,23 @@ def CopyBoard(board):
 
 
 class Board():
-    indices = []
-    for col in range(8):
-        for row in range(8):
-            indices.append((row,col))
-    isJumpAv = False
-    dbjIndices = (-1,-1)
-    selected = (-1,-1)
-    turn = "r"
-
-    pieces = {
-        "r":[],
-        "b":[]
-    }
 
     def __init__(self,boardType,copy=False):
         self.board = {}
-        
+        self.indices = []
+        for col in range(8):
+            for row in range(8):
+                self.indices.append((row,col))
+        self.isJumpAv = False
+        self.dbjIndices = (-1,-1)
+        self.selected = (-1,-1)
+        self.turn = "r"
+
+        self.pieces = {
+            "r":[],
+            "b":[]
+        }
+
         #the regular board
         if boardType == "Standard":
             for spot in self.indices:
@@ -61,19 +61,13 @@ class Board():
 
         #if you want to copy the board
         elif boardType == "Copy":
-            print("Before")
-            copy.printP()
-            self.pieces["r"] = []
-            self.pieces["b"] = []
-            print("After")
-            copy.printP()
 
             for spot in self.indices:
                 newSpot = Spot(None,None)
                 newSpot.setMe(copy.board[spot])
                 self.board[spot] = newSpot
-                if newSpot.isPlayer: tyler = 2
-                    # self.pieces[newSpot.color].append(newSpot)
+                if newSpot.isPlayer:
+                    self.pieces[newSpot.color].append(newSpot)
             
             self.window = copy.window
             self.turn = copy.turn
@@ -95,13 +89,9 @@ class Board():
             self.turn = "r"
 
     def movePiece(self,fromPos,toPos,test):
-        if test:
-            bufferPos = self.board[fromPos].pos
-            self.board[fromPos].pos = self.board[toPos].pos
-            self.board[toPos].pos = bufferPos
-        else:
-            self.board[fromPos].setPos("poop")
-            self.board[toPos].setPos("poop")
+        bufferPos = self.board[fromPos].pos
+        self.board[fromPos].pos = self.board[toPos].pos
+        self.board[toPos].pos = bufferPos
         
         self.board[toPos].setMe(self.board[fromPos])
         self.board[fromPos] = Spot("N",fromPos) #delete piece in spot
@@ -219,11 +209,11 @@ class Board():
         print("Red")
         for pie in self.pieces["r"]:
             print(pie, pie.pos)
-        # print("Black")
-        # for pie in self.pieces["b"]:
-        #     print(pie, pie.pos)
+        print("Black")
+        for pie in self.pieces["b"]:
+            print(pie, pie.pos)
         
-        # print("End", len(self.pieces["r"]))
+        print("End", len(self.pieces["r"]))
         
 
 

@@ -32,7 +32,6 @@ def play (board):
             
             newBoard = Board("Copy",board)
             newBoard.applyMove(move)
-            newBoard.printP()
             avg = 0#recursiveMoveFinder(newBoard,3,turn)
             print(move.start,move.end,avg)
             if avg > best:
