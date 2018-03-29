@@ -15,7 +15,7 @@ grid = Board("Standard")
 grid.window = mainWindow
 
 Player1 = AI.human
-Player2 = AI.human
+Player2 = AI.tgt_AI
 
 
 gameOver = False

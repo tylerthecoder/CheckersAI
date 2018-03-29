@@ -3,19 +3,6 @@ import sys
 sys.path.append("../")
 from board import *
 
-boardVals = [
-    [10,10,10,10,10,10,10,10],
-    [10, 9, 9, 9, 9, 9, 9,10],
-    [ 9, 8, 8, 8, 8, 8, 8, 9],
-    [ 8, 7, 7, 7, 7, 7, 7, 8],
-    [ 7, 6, 6, 6, 6, 6, 6, 7],
-    [ 5, 5, 5, 5, 5, 5, 5, 5],
-    [ 5, 5, 5, 5, 5, 5, 5, 5],
-    [10,10,10,10,10,10,10,10]
-]
-
-
-
 def play (board):
     turn = board.turn
     allMoves = board.getAllMoves(turn)
@@ -27,7 +14,7 @@ def play (board):
             newBoard = Board("Copy",board)
             newBoard.applyMove(move)
 
-            avg = 0#recursiveMoveFinder(newBoard,3,turn)
+            avg = recursiveMoveFinder(newBoard,3,turn)
             print(move.start,move.end,avg)
             if avg > best:
                 best = avg
@@ -35,7 +22,7 @@ def play (board):
             elif avg == best:
                 bestMove.append(move)
         
-    print("============================================current score:", boardValue(board,turn,1))
+    print("===================End of AI Turn=========================")
     return random.choice(bestMove)
 
 
@@ -54,16 +41,18 @@ def recursiveMoveFinder (board,depth,turn):
 
 
 def boardValue(grid,color,weight):
-    count = 0
-    for spot in grid.indices:
-        pie = grid.board[spot]
-        amount = 1
-        if pie.isPlayer:
-            if pie.king:
-                amount = 4
-            if pie.color == color:
-                count += amount * weight
-            else:
-                count -= amount * weight
-    return count
+    amount = 0
+    for pie in grid.pieces[color]:
+        if pie.king:
+            amount += 4 * weight
+        else:
+            amount += weight
+
+    for pie in grid.pieces[grid.otherColor(color)]:
+        if pie.king:
+            amount -= 4 * weight
+        else:
+            amount -= weight
+    return amount
+
 

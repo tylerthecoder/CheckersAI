@@ -69,6 +69,9 @@ class Board():
         elif self.turn == "b":
             self.turn = "r"
 
+    def otherColor (self,color):
+        return "r" if color == "b" else "b"
+
     def movePiece(self,fromPos,toPos):
         bufferPos = self.board[fromPos].pos
         self.board[fromPos].pos = self.board[toPos].pos
@@ -158,14 +161,15 @@ class Board():
 
     def getAllMoves(self,player,jumps=False):
         allMoves = []
-        for spot in self.indices:
-            if self.board[spot].color == player:
-                moves = self.getMovesForPiece(spot,jumps)
+        for pie in self.pieces[player]:
+            if pie.color == player:
+                moves = self.getMovesForPiece(pie,jumps)
                 allMoves += moves
         return allMoves
 
     def getMovesForPiece(self,spot,jumps=False):
         allMoves = []
+        spot = spot.pos
         rngi = [-1,1]
         if self.board[spot]:
             rngj = [-1,1]
@@ -173,7 +177,7 @@ class Board():
             rngj = [1]
         elif  self.board[spot].color == "b":
             rngj = [-1]
-        
+
         for i in rngi:
             for j in rngj:
                 check = (spot[0]+i,spot[1]+j)

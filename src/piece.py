@@ -12,6 +12,7 @@ class Spot:
         self.king = True
 
     def setMe (self,spot):
+        self.pos = spot.pos
         self.color = spot.color
         self.isPlayer = spot.isPlayer
         self.king = spot.king
