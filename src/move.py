@@ -1,12 +1,12 @@
 class Move():
-    valid = False
-    error = ""
-    jump = False
     def __init__(self,start,end,board):
         self.start = start
         self.end = end
         self.board = board
         self.spots = board.board
+        self.valid = False
+        self.error = ""
+        self.jump = False
         
         #not a spot on the board
         if not self.board.isRealSpot(self.start) or not self.board.isRealSpot(self.end):
