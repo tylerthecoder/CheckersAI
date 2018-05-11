@@ -5,7 +5,7 @@ import BoardFunctions as bf
 import Piece as p
 
 
-BOARD = bf.CreateBoard()
+BOARD = bf.CreateBoard(p.Piece)
 done = p.Piece.Done()
 d = next(done)
 

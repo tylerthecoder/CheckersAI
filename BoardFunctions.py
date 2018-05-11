@@ -75,7 +75,7 @@ pg.draw.circle(king, YELLOW, [int(tile_width / 2), int(tile_width / 2)], 10)
 king.set_colorkey(WHITE)
 
 
-def CreateBoard():
+def CreateBoard(board_piece):
     """
     This Function creates a 10x10 board for the Checkers game.
 
@@ -83,13 +83,13 @@ def CreateBoard():
     'Piece' objects of the appropriate color, or 'N's, for empty spaces.
     """
 
-    board = [['X' for i in range(10)] for j in range(10)]                       # TODO: Improve board creation efficiency, if possible.
-                                                                                # TODO: Modify to not specifically declare 'Piece' objects as game pieces.
-    for row in range(1, len(board) - 1):                                        #       Can be done with eval(), but using eval() is generally considered bad practice
+    board = [['X' for i in range(10)] for j in range(10)]
+
+    for row in range(1, len(board) - 1):                                        
         if row < 4:                                                             # Black side
             for col in range(1, len(board) - 1):
                 if (col + row) % 2 == 1:
-                    board[row][col] = Piece('b', [row,col])
+                    board[row][col] = board_piece(board_piece.BLACK_PIECE, [row,col])
                 else: board[row][col] = 'N'
 
         elif row > 3 and row < 6:                                               # Middle Area
@@ -99,7 +99,7 @@ def CreateBoard():
         elif row > 5:                                                           # Red Side
             for col in range(1, len(board) - 1):
                     if (col + row) % 2 == 1:
-                        board[row][col] = Piece('r', [row,col])
+                        board[row][col] = board_piece(board_piece.RED_PIECE, [row,col])
                     else: board[row][col] = 'N'
 
     return board
@@ -208,7 +208,7 @@ def PlayerTurn(color, board):
                     # If they select an enemy piece, check if it can be jumped. If so, do it.
                     elif selected_piece2.color in Piece.OtherColor(color):
                         jump = (square_pos2[1] - square_pos1[1], square_pos2[0] - square_pos1[0])
-                        jumps = list(filter(lambda x: x[0] == selected_piece1, Piece.GetAllJumps(Piece.pieces[Piece.SameColor(color)], board))) 
+                        jumps = list(filter(lambda x: x[0] == selected_piece1, Piece.GetAllJumps(Piece.pieces[Piece.SameColor(color)], board)))
                         for j in jumps:
                             if jump == j[1] and selected_piece1 == j[0]:
                                 Piece.DoJump(selected_piece1, jump, board)

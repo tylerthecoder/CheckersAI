@@ -13,7 +13,8 @@ class Piece:
                  'R' : ((-1, 1), (-1, -1), (1, 1), (1, -1)),
                  'B' : ((-1, 1), (-1, -1), (1, 1), (1, -1))}
 
-
+    BLACK_PIECE = 'b'
+    RED_PIECE = 'r'
     PIECE_VALUE = 16                                                            # TODO: Subject to change -- needs balancing
     KING_VALUE = 90
     DOUBLE_JUMP_BONUS = 30
